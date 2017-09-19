@@ -7,6 +7,7 @@ import type { PrivateKeyValue } from './PrivateKey';
 import MnemonicDecrypt from './Mnemonic';
 import LedgerNanoSDecrypt from './LedgerNano';
 import TrezorDecrypt from './Trezor';
+import DigitalBitboxDecrypt from './DigitalBitbox';
 import ViewOnlyDecrypt from './ViewOnly';
 import map from 'lodash/map';
 import {
@@ -51,6 +52,12 @@ const WALLETS = {
   trezor: {
     lid: 'x_Trezor',
     component: TrezorDecrypt,
+    initialParams: {},
+    unlock: setWallet
+  },
+  'digital-bitbox': {
+    lid: 'x_DigitalBitbox',
+    component: DigitalBitboxDecrypt,
     initialParams: {},
     unlock: setWallet
   },
