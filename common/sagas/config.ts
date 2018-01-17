@@ -8,7 +8,8 @@ import {
   takeLatest,
   takeEvery,
   select,
-  race
+  race,
+  apply
 } from 'redux-saga/effects';
 import { NODES, NETWORKS, NodeConfig, CustomNodeConfig, CustomNetworkConfig } from 'config/data';
 import {
@@ -22,7 +23,8 @@ import {
   getNodeConfig,
   getCustomNodeConfigs,
   getCustomNetworkConfigs,
-  getOffline
+  getOffline,
+  getNodeLib
 } from 'selectors/config';
 import { AppState } from 'reducers';
 import { TypeKeys } from 'actions/config/constants';
@@ -49,12 +51,13 @@ export const getConfig = (state: AppState): ConfigState => state.config;
 let hasCheckedOnline = false;
 export function* pollOfflineStatus(): SagaIterator {
   while (true) {
-    const node: NodeConfig = yield select(getNodeConfig);
+    const node = yield select(getNodeLib);
     const isOffline: boolean = yield select(getOffline);
 
     // If our offline state disagrees with the browser, run a check
     // Don't check if the user is in another tab or window
     const shouldPing = !hasCheckedOnline || navigator.onLine === isOffline;
+    const x = yield apply(node, node.ping);
     if (shouldPing && !document.hidden) {
       const { pingSucceeded } = yield race({
         pingSucceeded: call(node.lib.ping.bind(node.lib)),

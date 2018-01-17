@@ -46,8 +46,6 @@ export default class RpcNode implements INode {
   }
 
   public estimateGas(transaction: Partial<IHexStrTransaction>): Promise<Wei> {
-    // Timeout after 10 seconds
-
     return this.client
       .call(this.requests.estimateGas(transaction))
       .then(isValidEstimateGas)

@@ -1,5 +1,53 @@
-export { default as RPCNode } from './rpc';
-export { default as InfuraNode } from './infura';
-export { default as EtherscanNode } from './etherscan';
-export { default as CustomNode } from './custom';
-export { default as Web3Node } from './web3';
+import { INodeConstructor, INode } from 'libs/nodes/INode';
+import PRPCNode from './rpc';
+import PInfuraNode from './infura';
+import PEtherscanNode from './etherscan';
+import PCustomNode from './custom';
+import PWeb3Node from './web3';
+import { requester } from 'sagas/node/node';
+type methods = keyof RPCNode;
+
+const handler: ProxyHandler<INode> = {
+  get: (target, methodName: string) => {
+    const nodeMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(target));
+    if (nodeMethods.includes(methodName)) {
+      return requester(methodName);
+    }
+  }
+};
+
+const createNode = (ctor: any, args: any) => {
+  const instance = new ctor(...args);
+  return new Proxy(instance, handler);
+};
+
+const obj = {
+  RPCNode: PRPCNode,
+  InfuraNode: PInfuraNode,
+  EtherscanNode: PEtherscanNode,
+  CustomNode: PCustomNode,
+  Web3Node: PWeb3Node
+};
+
+interface INodeInterfaces {
+  RPCNode: typeof PRPCNode;
+  InfuraNode: typeof PInfuraNode;
+  EtherscanNode: typeof PEtherscanNode;
+  CustomNode: typeof PCustomNode;
+  Web3Node: typeof PWeb3Node;
+}
+
+const x = Object.entries(obj).reduce(
+  (acc, [key, value]) => {
+    return {
+      ...acc,
+      [key](...args) {
+        return createNode(value, args);
+      }
+    };
+  },
+  {} as INodeInterfaces
+);
+
+const { CustomNode, EtherscanNode, InfuraNode, RPCNode, Web3Node } = x;
+export { CustomNode, EtherscanNode, InfuraNode, RPCNode, Web3Node };

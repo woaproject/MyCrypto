@@ -94,7 +94,7 @@ export interface CustomNetworkConfig {
 
 export interface NodeConfig {
   network: string;
-  lib: RPCNode | Web3Node;
+  lib: typeof RPCNode | typeof Web3Node;
   service: string;
   estimateGas?: boolean;
   hidden?: boolean;
@@ -167,53 +167,65 @@ export const NETWORKS: { [key: string]: NetworkConfig } = {
   }
 };
 
+export enum DefaultNodeNames {
+  eth_mew = 'eth_mew',
+  eth_ethscan = 'eth_ethscan',
+  eth_infura = 'eth_infura',
+  rop_mew = 'rop_mew',
+  rop_infura = 'rop_infura',
+  kov_ethscan = 'kov_ethscan',
+  rin_ethscan = 'rin_ethscan',
+  rin_infura = 'rin_infura',
+  web3 = 'web3'
+}
+
 export const NODES: { [key: string]: NodeConfig } = {
   eth_mew: {
     network: 'ETH',
-    lib: new RPCNode('https://api.myetherapi.com/eth'),
+    lib: RPCNode('https://api.myetherapi.com/eth'),
     service: 'MyEtherWallet',
     estimateGas: true
   },
   eth_ethscan: {
     network: 'ETH',
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://api.etherscan.io/api'),
+    lib: EtherscanNode('https://api.etherscan.io/api'),
     estimateGas: false
   },
   eth_infura: {
     network: 'ETH',
     service: 'infura.io',
-    lib: new InfuraNode('https://mainnet.infura.io/mew'),
+    lib: InfuraNode('https://mainnet.infura.io/mew'),
     estimateGas: false
   },
   rop_mew: {
     network: 'Ropsten',
     service: 'MyEtherWallet',
-    lib: new RPCNode('https://api.myetherapi.com/rop'),
+    lib: RPCNode('https://api.myetherapi.com/rop'),
     estimateGas: false
   },
   rop_infura: {
     network: 'Ropsten',
     service: 'infura.io',
-    lib: new InfuraNode('https://ropsten.infura.io/mew'),
+    lib: InfuraNode('https://ropsten.infura.io/mew'),
     estimateGas: false
   },
   kov_ethscan: {
     network: 'Kovan',
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://kovan.etherscan.io/api'),
+    lib: EtherscanNode('https://kovan.etherscan.io/api'),
     estimateGas: false
   },
   rin_ethscan: {
     network: 'Rinkeby',
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://rinkeby.etherscan.io/api'),
+    lib: EtherscanNode('https://rinkeby.etherscan.io/api'),
     estimateGas: false
   },
   rin_infura: {
     network: 'Rinkeby',
     service: 'infura.io',
-    lib: new InfuraNode('https://rinkeby.infura.io/mew'),
+    lib: InfuraNode('https://rinkeby.infura.io/mew'),
     estimateGas: false
   }
 };
@@ -232,7 +244,7 @@ export async function setupWeb3Node(): Promise<Web3NodeInfo> {
     );
   }
 
-  const lib = new Web3Node();
+  const lib = Web3Node();
   const networkId = await lib.getNetVersion();
   const accounts = await lib.getAccounts();
 

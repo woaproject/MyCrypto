@@ -1,14 +1,19 @@
 import { Token } from 'config/data';
 import { Wei, TokenValue } from 'libs/units';
 import { IHexStrTransaction } from 'libs/transaction';
-
+import {} from './';
 export interface TxObj {
   to: string;
   data: string;
 }
+
 interface TokenBalanceResult {
   balance: TokenValue;
   error: string | null;
+}
+
+export interface INodeConstructor {
+  new (endpoint: string): INode;
 }
 export interface INode {
   ping(): Promise<boolean>;

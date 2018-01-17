@@ -10,12 +10,12 @@ import {
   State as TransactionState
 } from 'reducers/transaction';
 import { State as SwapState, INITIAL_STATE as swapInitialState } from 'reducers/swap';
-import { applyMiddleware, createStore } from 'redux';
+import { applyMiddleware, createStore, Store } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { createLogger } from 'redux-logger';
 import createSagaMiddleware from 'redux-saga';
 import { loadStatePropertyOrEmptyObject, saveState } from 'utils/localStorage';
-import RootReducer from './reducers';
+import RootReducer, { AppState } from './reducers';
 import promiseMiddleware from 'redux-promise-middleware';
 import { getNodeConfigFromId } from 'utils/node';
 import { getNetworkConfigFromId } from 'utils/network';
@@ -164,4 +164,4 @@ const configureStore = () => {
   return store;
 };
 
-export const configuredStore = configureStore();
+export const configuredStore: Store<AppState> = configureStore();
