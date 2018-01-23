@@ -10,12 +10,12 @@ import {
   State as TransactionState
 } from 'reducers/transaction';
 import { State as SwapState, INITIAL_STATE as swapInitialState } from 'reducers/swap';
-import { applyMiddleware, createStore } from 'redux';
+import { applyMiddleware, createStore, Store, GenericStoreEnhancer } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import { createLogger } from 'redux-logger';
 import createSagaMiddleware from 'redux-saga';
 import { loadStatePropertyOrEmptyObject, saveState } from 'utils/localStorage';
-import RootReducer from './reducers';
+import RootReducer, { AppState } from './reducers';
 import promiseMiddleware from 'redux-promise-middleware';
 import { getNodeConfigFromId } from 'utils/node';
 import { getNetworkConfigFromId } from 'utils/network';
@@ -31,8 +31,7 @@ const configureStore = () => {
   const reduxPromiseMiddleWare = promiseMiddleware({
     promiseTypeSuffixes: ['REQUESTED', 'SUCCEEDED', 'FAILED']
   });
-  let middleware;
-  let store;
+  let middleware: GenericStoreEnhancer;
 
   if (process.env.NODE_ENV !== 'production') {
     middleware = composeWithDevTools(
@@ -118,7 +117,13 @@ const configureStore = () => {
     persistedInitialState.config.nodeSelection = configInitialState.nodeSelection;
   }
 
-  store = createStore(RootReducer, persistedInitialState, middleware);
+  const store: Store<AppState> = createStore(
+    RootReducer,
+    // TODO: Remove this once Redux is updated to allow partial states
+    // Should be in the next version bump (> 3.7.2)
+    (persistedInitialState as any) as AppState,
+    middleware
+  );
 
   // Add all of the sagas to the middleware
   Object.keys(sagas).forEach(saga => {
@@ -133,8 +138,7 @@ const configureStore = () => {
           nodeSelection: state.config.nodeSelection,
           languageSelection: state.config.languageSelection,
           customNodes: state.config.customNodes,
-          customNetworks: state.config.customNetworks,
-          setGasLimit: state.config.setGasLimit
+          customNetworks: state.config.customNetworks
         },
         transaction: {
           fields: {
