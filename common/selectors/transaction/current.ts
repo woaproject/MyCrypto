@@ -19,8 +19,7 @@ interface ICurrentTo {
 
 const isEtherTransaction = (state: AppState) => {
   const unit = getUnit(state);
-  const etherUnit = isEtherUnit(unit);
-  return etherUnit;
+  return isEtherUnit(unit);
 };
 
 const getCurrentTo = (state: AppState): ICurrentTo =>

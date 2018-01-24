@@ -27,7 +27,7 @@ export interface Token {
 }
 
 export interface NetworkContract {
-  name: NetworkKeys;
+  name: string;
   address?: string;
   abi: string;
 }

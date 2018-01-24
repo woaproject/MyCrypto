@@ -1,3 +1,4 @@
+import { createSelector } from 'reselect';
 import { AppState } from 'reducers';
 import { getCurrentTo, getCurrentValue } from './current';
 import { getFields } from './fields';
@@ -17,7 +18,9 @@ import { Wei } from 'libs/units';
 import { getTransactionFields } from 'libs/transaction/utils/ether';
 import { getNetworkConfig } from 'selectors/config';
 
-const getTransactionState = (state: AppState) => state.transaction;
+function getTransactionState(state: AppState) {
+  return state.transaction;
+}
 
 export interface IGetTransaction {
   transaction: EthTx;
@@ -45,14 +48,14 @@ const getTransaction = (state: AppState): IGetTransaction => {
   return { transaction, isFullTransaction };
 };
 
-const nonStandardTransaction = (state: AppState): boolean => {
+function nonStandardTransaction(state: AppState): boolean {
   const etherTransaction = isEtherTransaction(state);
   const { isFullTransaction } = getTransaction(state);
   const dataExists = getDataExists(state);
   return isFullTransaction && dataExists && etherTransaction;
-};
+}
 
-const getGasCost = (state: AppState) => {
+function getGasCost(state: AppState) {
   const gasPrice = getGasPrice(state);
   const gasLimit = getGasLimit(state);
   if (!gasLimit.value) {
@@ -61,9 +64,9 @@ const getGasCost = (state: AppState) => {
   const cost = gasLimit.value.mul(gasPrice.value);
 
   return cost;
-};
+}
 
-const serializedAndTransactionFieldsMatch = (state: AppState, isLocallySigned: boolean) => {
+function serializedAndTransactionFieldsMatch(state: AppState, isLocallySigned: boolean) {
   const serialzedTransaction = getSerializedTransaction(state);
   const { transaction, isFullTransaction } = getTransaction(state);
   if (!isFullTransaction || !serialzedTransaction) {
@@ -87,7 +90,7 @@ const serializedAndTransactionFieldsMatch = (state: AppState, isLocallySigned: b
   return transactionsMatch && isLocallySigned
     ? makeTransaction(serialzedTransaction).verifySignature()
     : true;
-};
+}
 
 export {
   getTransaction,

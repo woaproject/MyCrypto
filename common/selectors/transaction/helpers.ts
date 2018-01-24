@@ -2,23 +2,24 @@ import { AppState } from 'reducers';
 import { ICurrentTo, ICurrentValue } from 'selectors/transaction';
 import { isEtherUnit } from 'libs/units';
 
-export const reduceToValues = (transactionFields: AppState['transaction']['fields']) =>
-  Object.keys(transactionFields).reduce(
+export function reduceToValues(transactionFields: AppState['transaction']['fields']) {
+  return Object.keys(transactionFields).reduce(
     (obj, currFieldName) => {
       const currField = transactionFields[currFieldName];
       return { ...obj, [currFieldName]: currField.value };
     },
     {} as any //TODO: Fix types
   );
+}
 
-export const isFullTx = (
+export function isFullTx(
   transactionFields: AppState['transaction']['fields'],
   currentTo: ICurrentTo,
   currentValue: ICurrentValue,
   dataExists: boolean,
   validGasCost: boolean,
   unit: string // if its ether, we can have empty data, if its a token, we cant have value
-) => {
+) {
   const { data, value, to, ...rest } = transactionFields;
   const partialParamsToCheck = { ...rest };
   const validPartialParams = Object.values(partialParamsToCheck).reduce<boolean>(
@@ -47,4 +48,4 @@ export const isFullTx = (
       currentTo.value
     );
   }
-};
+}

@@ -2,8 +2,10 @@ import {
   getTokens,
   getWalletConfigTokens,
   getTokenBalances,
+  getNonZeroTokenBalances,
   getTokenBalance,
   getShownTokenBalances,
+  getNonZeroShownTokenBalances,
   getWalletType
 } from 'selectors/wallet';
 import { TokenValue } from 'libs/units';
@@ -42,6 +44,12 @@ describe('selectors/wallet', () => {
       }
     }
   };
+
+  const shownTkState = { ...tokenBalanceState };
+  shownTkState.wallet.config = {
+    tokens: ['TEST', 'ZERO']
+  };
+  const shownTkBalances = getShownTokenBalances(shownTkState);
 
   describe('getTokens', () => {
     const tokensState = { ...tokenBalanceState };
@@ -102,6 +110,11 @@ describe('selectors/wallet', () => {
     testShallowlyEqual(getTokenBalances(state), getTokenBalances(state));
   });
 
+  describe('getNonZeroTokenBalances', () => {
+    const state = getInitialState();
+    testShallowlyEqual(getNonZeroTokenBalances(state), getNonZeroTokenBalances(state));
+  });
+
   describe('getTokenBalance', () => {
     const tokenBalance = getTokenBalance(tokenBalanceState, 'TEST');
 
@@ -118,22 +131,10 @@ describe('selectors/wallet', () => {
   });
 
   describe('getShownTokenBalances', () => {
-    const shownTkState = { ...tokenBalanceState };
-    shownTkState.wallet.config = {
-      tokens: ['TEST', 'ZERO']
-    };
-    const shownTkBalances = getShownTokenBalances(shownTkState);
-
     it('should retrieve balances matching wallet config tokens', () => {
       expect(shownTkBalances[0].symbol).toBe('TEST');
       expect(shownTkBalances[1].symbol).toBe('ZERO');
       expect(shownTkBalances).toHaveLength(2);
-    });
-
-    it('should exclude zero balances, if passed that arg', () => {
-      const nonZeroTkBalances = getShownTokenBalances(shownTkState, true);
-      expect(nonZeroTkBalances[0].symbol).toBe('TEST');
-      expect(nonZeroTkBalances).toHaveLength(1);
     });
 
     it('should exclude tokens that are in config, but not in balances', () => {
@@ -149,6 +150,17 @@ describe('selectors/wallet', () => {
     });
 
     testShallowlyEqual(shownTkBalances, getShownTokenBalances(shownTkState));
+  });
+
+  describe('getNonZeroShownTokenBalances', () => {
+    const nonZeroTkBalances = getNonZeroShownTokenBalances(shownTkState);
+
+    it('should exclude zero balances, if passed that arg', () => {
+      expect(nonZeroTkBalances[0].symbol).toBe('TEST');
+      expect(nonZeroTkBalances).toHaveLength(1);
+    });
+
+    testShallowlyEqual(nonZeroTkBalances, getNonZeroShownTokenBalances(shownTkState));
   });
 
   describe('getWalletType', () => {

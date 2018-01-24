@@ -1,116 +1,133 @@
+import { createSelector } from 'reselect';
 import { TokenValue, Wei } from 'libs/units';
 import { Token } from 'config';
 import { AppState } from 'reducers';
-import { getNetworkConfig } from 'selectors/config';
-import { IWallet, Web3Wallet, LedgerWallet, TrezorWallet, WalletConfig } from 'libs/wallet';
+import { getNetworkTokens } from 'selectors/config';
+import { getCustomTokens } from 'selectors/customTokens';
+import { Web3Wallet, LedgerWallet, TrezorWallet } from 'libs/wallet';
 import { isEtherTransaction, getUnit } from './transaction';
 
-export function getWalletInst(state: AppState): IWallet | null | undefined {
+function getWalletTokenBalances(state: AppState) {
+  return state.wallet.tokens;
+}
+
+export function getWalletInst(state: AppState) {
   return state.wallet.inst;
 }
 
-export function getWalletConfig(state: AppState): WalletConfig | null | undefined {
+export function getWalletConfig(state: AppState) {
   return state.wallet.config;
 }
 
-export function isWalletFullyUnlocked(state: AppState): boolean | null | undefined {
+export function isWalletFullyUnlocked(state: AppState) {
   return state.wallet.inst && !state.wallet.inst.isReadOnly;
 }
 
 export interface TokenBalance {
   symbol: string;
   balance: TokenValue;
-  custom: boolean;
+  custom?: boolean;
   decimal: number;
   error: string | null;
 }
 
 export type MergedToken = Token & {
-  custom: boolean;
+  custom?: boolean;
 };
 
-export function getTokens(state: AppState): MergedToken[] {
-  const network = getNetworkConfig(state);
-  const tokens: Token[] = network ? network.tokens : [];
-  return tokens.concat(
-    state.customTokens.map((token: Token) => {
-      const mergedToken = { ...token, custom: true };
-      return mergedToken;
-    })
-  ) as MergedToken[];
-}
-
-export function getWalletConfigTokens(state: AppState): MergedToken[] {
-  const tokens = getTokens(state);
-  const config = getWalletConfig(state);
-  if (!config || !config.tokens) {
-    return [];
+export const getTokens = createSelector(
+  getNetworkTokens,
+  getCustomTokens,
+  (tokens, customTokens): MergedToken[] => {
+    return tokens.concat(
+      customTokens.map((token: Token) => {
+        const mergedToken = { ...token, custom: true };
+        return mergedToken;
+      })
+    );
   }
-  return config.tokens
-    .map(symbol => tokens.find(t => t.symbol === symbol))
-    .filter(token => token) as MergedToken[];
-}
+);
 
-export const getToken = (state: AppState, unit: string): MergedToken | undefined => {
+export const getWalletConfigTokens = createSelector(
+  getTokens,
+  getWalletConfig,
+  (tokens, config) => {
+    if (!config || !config.tokens) {
+      return [];
+    }
+    return config.tokens
+      .map(symbol => tokens.find(t => t.symbol === symbol))
+      .filter(token => token) as MergedToken[];
+  }
+);
+
+export function getToken(state: AppState, unit: string): MergedToken | undefined {
   const tokens = getTokens(state);
   const token = tokens.find(t => t.symbol === unit);
   return token;
-};
-
-export function getTokenBalances(state: AppState, nonZeroOnly: boolean = false): TokenBalance[] {
-  const tokens = getTokens(state);
-  if (!tokens) {
-    return [];
-  }
-  const ret = tokens.map(t => ({
-    symbol: t.symbol,
-    balance: state.wallet.tokens[t.symbol]
-      ? state.wallet.tokens[t.symbol].balance
-      : TokenValue('0'),
-    error: state.wallet.tokens[t.symbol] ? state.wallet.tokens[t.symbol].error : null,
-    custom: t.custom,
-    decimal: t.decimal
-  }));
-
-  return nonZeroOnly ? ret.filter(t => !t.balance.isZero()) : ret;
 }
 
-export const getTokenBalance = (state: AppState, unit: string): TokenValue | null => {
+export const getTokenBalances = createSelector(
+  getTokens,
+  getWalletTokenBalances,
+  (tokens, tkBalances) => {
+    if (!tokens) {
+      return [];
+    }
+    return tokens.map(t => ({
+      symbol: t.symbol,
+      balance: tkBalances[t.symbol] ? tkBalances[t.symbol].balance : TokenValue('0'),
+      error: tkBalances[t.symbol] ? tkBalances[t.symbol].error : null,
+      custom: t.custom,
+      decimal: t.decimal
+    }));
+  }
+);
+
+export const getNonZeroTokenBalances = createSelector(getTokenBalances, tokenBalances =>
+  tokenBalances.filter(t => !t.balance.isZero())
+);
+
+export function getTokenBalance(state: AppState, unit: string): TokenValue | null {
   const token = getTokenWithBalance(state, unit);
   if (!token) {
-    return token;
+    return null;
   }
   return token.balance;
-};
+}
 
-export const getTokenWithBalance = (state: AppState, unit: string): TokenBalance => {
-  const tokens = getTokenBalances(state, false);
-  const currentToken = tokens.filter(t => t.symbol === unit);
-  //TODO: getting the first index is kinda hacky
-  return currentToken[0];
-};
+export function getTokenWithBalance(state: AppState, symbol: string): TokenBalance | null {
+  const tokens = getTokenBalances(state);
+  const balance = tokens.find(t => t.symbol === symbol);
+  return balance || null;
+}
 
 export interface IWalletType {
   isWeb3Wallet: boolean;
   isHardwareWallet: boolean;
 }
 
-export const getWallet = (state: AppState) => state.wallet;
+export function getWallet(state: AppState) {
+  return state.wallet;
+}
 
-export const getWalletType = (state: AppState): IWalletType => {
-  const wallet = getWalletInst(state);
+export const getWalletType = createSelector(getWalletInst, (wallet): IWalletType => {
   const isWeb3Wallet = wallet instanceof Web3Wallet;
   const isLedgerWallet = wallet instanceof LedgerWallet;
   const isTrezorWallet = wallet instanceof TrezorWallet;
   const isHardwareWallet = isLedgerWallet || isTrezorWallet;
   return { isWeb3Wallet, isHardwareWallet };
-};
+});
 
-export const isUnlocked = (state: AppState) => !!getWalletInst(state);
+export function isUnlocked(state: AppState) {
+  return !!getWalletInst(state);
+}
 
-export const getEtherBalance = (state: AppState): Wei | null => getWallet(state).balance.wei;
+export function getEtherBalance(state: AppState): Wei | null {
+  return getWallet(state).balance.wei;
+}
 
-export const getCurrentBalance = (state: AppState): Wei | TokenValue | null => {
+export function getCurrentBalance(state: AppState): Wei | TokenValue | null {
   const etherTransaction = isEtherTransaction(state);
   if (etherTransaction) {
     return getEtherBalance(state);
@@ -118,15 +135,9 @@ export const getCurrentBalance = (state: AppState): Wei | TokenValue | null => {
     const unit = getUnit(state);
     return getTokenBalance(state, unit);
   }
-};
+}
 
-export function getShownTokenBalances(
-  state: AppState,
-  nonZeroOnly: boolean = false
-): TokenBalance[] {
-  const tokenBalances = getTokenBalances(state, nonZeroOnly);
-  const walletConfig = getWalletConfig(state);
-
+const getShown = (tokenBalances, walletConfig: AppState['wallet']['config']) => {
   let walletTokens: string[] = [];
   if (walletConfig) {
     if (walletConfig.tokens) {
@@ -135,4 +146,12 @@ export function getShownTokenBalances(
   }
 
   return tokenBalances.filter(t => walletTokens.includes(t.symbol));
-}
+};
+
+export const getShownTokenBalances = createSelector(getTokenBalances, getWalletConfig, getShown);
+
+export const getNonZeroShownTokenBalances = createSelector(
+  getNonZeroTokenBalances,
+  getWalletConfig,
+  getShown
+);

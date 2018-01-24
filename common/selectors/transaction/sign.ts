@@ -1,20 +1,27 @@
+import { createSelector } from 'reselect';
 import { getWalletType } from 'selectors/wallet';
 import { AppState } from 'reducers';
 import { getTransactionState } from './transaction';
 
-const getSignState = (state: AppState) => getTransactionState(state).sign;
+function getSignState(state: AppState) {
+  return getTransactionState(state).sign;
+}
 
-const signaturePending = (state: AppState) => {
-  const { isHardwareWallet } = getWalletType(state);
-  const { pending } = state.transaction.sign;
-  return { isHardwareWallet, isSignaturePending: pending };
-};
+const signaturePending = createSelector(getWalletType, getSignState, (wtype, sign) => ({
+  isHardwareWallet: wtype.isHardwareWallet,
+  isSignaturePending: sign.pending
+}));
 
-const getSignedTx = (state: AppState) => getSignState(state).local.signedTransaction;
+function getSignedTx(state: AppState) {
+  return getSignState(state).local.signedTransaction;
+}
 
-const getWeb3Tx = (state: AppState) => getSignState(state).web3.transaction;
+function getWeb3Tx(state: AppState) {
+  return getSignState(state).web3.transaction;
+}
 
-const getSerializedTransaction = (state: AppState) =>
-  getWalletType(state).isWeb3Wallet ? getWeb3Tx(state) : getSignedTx(state);
+function getSerializedTransaction(state: AppState) {
+  return getWalletType(state).isWeb3Wallet ? getWeb3Tx(state) : getSignedTx(state);
+}
 
 export { signaturePending, getSignedTx, getWeb3Tx, getSignState, getSerializedTransaction };

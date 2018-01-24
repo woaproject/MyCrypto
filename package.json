@@ -47,6 +47,7 @@
     "redux-logger": "3.0.6",
     "redux-promise-middleware": "4.4.2",
     "redux-saga": "0.16.0",
+    "reselect": "3.0.1",
     "scryptsy": "2.0.0",
     "store2": "2.5.9",
     "uuid": "3.1.0",

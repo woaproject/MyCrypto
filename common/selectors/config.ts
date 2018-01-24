@@ -1,3 +1,4 @@
+import { createSelector } from 'reselect';
 import {
   CustomNetworkConfig,
   CustomNodeConfig,
@@ -34,12 +35,12 @@ export function getNetworkConfig(state: AppState): NetworkConfig {
 
 export function getNetworkContracts(state: AppState): NetworkContract[] | null {
   const network = getNetworkConfig(state);
-  return network ? network.contracts : [];
+  return network.contracts || [];
 }
 
 export function getNetworkTokens(state: AppState): Token[] {
   const network = getNetworkConfig(state);
-  return network ? network.tokens : [];
+  return network.tokens;
 }
 
 export function getAllTokens(state: AppState): Token[] {
