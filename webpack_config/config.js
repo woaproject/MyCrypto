@@ -22,7 +22,14 @@ module.exports = {
   typescriptRule: {
     test: /\.(ts|tsx)$/,
     include: [paths.src, paths.shared, paths.electron],
-    use: [{ loader: 'ts-loader', options: { happyPackMode: true, logLevel: 'info' } }],
+    use: [{
+      loader: 'ts-loader',
+      options: {
+        happyPackMode: true,
+        logLevel: 'info',
+        silent: true
+      }
+    }],
     exclude: ['assets', 'sass', 'vendor', 'translations/lang']
       .map(dir => path.resolve(paths.src, dir))
       .concat([paths.modules])

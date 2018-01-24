@@ -30,13 +30,12 @@ npm run test:int # run tests with Jest
 
 #### Dev (HTTPS):
 
-1. Create your own SSL Certificate (Heroku has a [nice guide here](https://devcenter.heroku.com/articles/ssl-certificate-self))
-2. Move the `.key` and `.crt` files into `webpack_config/server.*`
-3. Run the following command:
-
 ```bash
 npm run dev:https
 ```
+
+Necessary for certain features. The generated certificate will be invalid, just
+accept it in your browser.
 
 #### Address Derivation Checker:
 

@@ -15,6 +15,7 @@ const BabelMinifyPlugin = require('babel-minify-webpack-plugin');
 const SriPlugin = require('webpack-subresource-integrity');
 const ClearDistPlugin = require('./plugins/clearDist');
 const SortCachePlugin = require('./plugins/sortCache');
+const ServerLogPlugin = require('./plugins/serverLog');
 
 const config = require('./config');
 
@@ -28,6 +29,7 @@ const DEFAULT_OPTIONS = {
 module.exports = function(opts = {}) {
   const options = Object.assign({}, DEFAULT_OPTIONS, opts);
   const isDownloadable = options.isHTMLBuild || options.isElectronBuild;
+  const port = process.env.HTTPS ? 3443 : 3000;
 
   // ====================
   // ====== Entry =======
@@ -252,7 +254,8 @@ module.exports = function(opts = {}) {
       }),
       new webpack.HotModuleReplacementPlugin(),
       new webpack.NoEmitOnErrorsPlugin(),
-      new FriendlyErrorsPlugin()
+      new FriendlyErrorsPlugin(),
+      new ServerLogPlugin(port)
     );
   }
 
@@ -288,6 +291,21 @@ module.exports = function(opts = {}) {
   }
 
   // ====================
+  // ===== DevServer ====
+  // ====================
+
+  let devServer = undefined;
+  if (!options.isProduction) {
+    devServer = {
+      port,
+      progress: true,
+      stats: 'minimal',
+      https: !!process.env.HTTPS,
+      historyApiFallback: true
+    };
+  }
+
+  // ====================
   // ====== Output ======
   // ====================
   const output = {
@@ -304,6 +322,7 @@ module.exports = function(opts = {}) {
     output,
     module: { rules },
     plugins,
+    devServer,
     target: 'web',
     resolve: config.resolve,
     performance: {
