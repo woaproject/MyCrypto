@@ -1,16 +1,22 @@
 import './LedgerNano.scss';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import translate, { translateRaw } from 'translations';
 import DeterministicWalletsModal from './DeterministicWalletsModal';
 import { LedgerWallet } from 'libs/wallet';
 import ledger from 'ledgerco';
-import DPATHS from 'config/dpaths';
 import { Spinner } from 'components/ui';
+import { connect } from 'react-redux';
+import { AppState } from 'reducers';
+import { SecureWalletName } from 'config';
+import { getPaths, getSingleDPath } from 'selectors/config/wallet';
 
-const DEFAULT_PATH = DPATHS.LEDGER[0].value;
-
-interface Props {
+interface OwnProps {
   onUnlock(param: any): void;
+}
+
+interface StateProps {
+  dPath: DPath;
+  dPaths: DPath[];
 }
 
 interface State {
@@ -22,11 +28,13 @@ interface State {
   showTip: boolean;
 }
 
-export class LedgerNanoSDecrypt extends Component<Props, State> {
+type Props = OwnProps & StateProps;
+
+class LedgerNanoSDecryptClass extends PureComponent<Props, State> {
   public state: State = {
     publicKey: '',
     chainCode: '',
-    dPath: DEFAULT_PATH,
+    dPath: this.props.dPath.value,
     error: null,
     isLoading: false,
     showTip: false
@@ -114,7 +122,7 @@ export class LedgerNanoSDecrypt extends Component<Props, State> {
           publicKey={publicKey}
           chainCode={chainCode}
           dPath={dPath}
-          dPaths={DPATHS.LEDGER}
+          dPaths={this.props.dPaths}
           onCancel={this.handleCancel}
           onConfirmAddress={this.handleUnlock}
           onPathChange={this.handlePathChange}
@@ -146,11 +154,11 @@ export class LedgerNanoSDecrypt extends Component<Props, State> {
           });
         })
         .catch(err => {
-          if (err.metaData.code === 5) {
+          if (err && err.metaData && err.metaData.code === 5) {
             this.showTip();
           }
           this.setState({
-            error: err.metaData.type,
+            error: err && err.metaData ? err.metaData.type : err.toString(),
             isLoading: false
           });
         });
@@ -174,7 +182,16 @@ export class LedgerNanoSDecrypt extends Component<Props, State> {
     this.setState({
       publicKey: '',
       chainCode: '',
-      dPath: DEFAULT_PATH
+      dPath: this.props.dPath.value
     });
   }
 }
+
+function mapStateToProps(state: AppState): StateProps {
+  return {
+    dPath: getSingleDPath(state, SecureWalletName.LEDGER_NANO_S),
+    dPaths: getPaths(state, SecureWalletName.LEDGER_NANO_S)
+  };
+}
+
+export const LedgerNanoSDecrypt = connect(mapStateToProps)(LedgerNanoSDecryptClass);
