@@ -1,13 +1,15 @@
-import { RPCNode, Web3Node } from 'libs/nodes';
 import { StaticNetworkIds } from './network';
 import { StaticNodesState, CustomNodesState } from 'reducers/config/nodes';
 import CustomNode from 'libs/nodes/custom';
+import RPCNode from 'libs/nodes/rpc';
+import Web3Node from 'libs/nodes/web3';
 
 interface CustomNodeConfig {
   id: string;
   isCustom: true;
   name: string;
   lib: CustomNode;
+  pLib: CustomNode;
   service: 'your custom node';
   url: string;
   port: number;
@@ -22,6 +24,8 @@ interface StaticNodeConfig {
   isCustom: false;
   network: StaticNetworkIds;
   lib: RPCNode | Web3Node;
+  pLib: RPCNode | Web3Node;
+
   service: string;
   estimateGas?: boolean;
   hidden?: boolean;

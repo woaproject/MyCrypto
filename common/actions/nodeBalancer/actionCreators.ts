@@ -13,7 +13,6 @@ import {
   NodeRemovedAction,
   TypeKeys
 } from 'actions/nodeBalancer';
-import { Omit } from 'react-router';
 
 export const balancerFlush = (): BalancerFlushAction => ({
   type: TypeKeys.BALANCER_FLUSH
@@ -56,15 +55,12 @@ export const workerKilled = (payload: WorkerKilledAction['payload']): WorkerKill
   payload
 });
 
-export const nodeCallRequested = (() => {
-  let i = 0;
-  return (
-    payload: Omit<NodeCallRequestedAction['payload'], 'callId'>
-  ): NodeCallRequestedAction => ({
-    type: TypeKeys.NODE_CALL_REQUESTED,
-    payload: { ...payload, callId: i++ }
-  });
-})();
+export const nodeCallRequested = (
+  payload: NodeCallRequestedAction['payload']
+): NodeCallRequestedAction => ({
+  type: TypeKeys.NODE_CALL_REQUESTED,
+  payload: { ...payload }
+});
 
 export const nodeCallTimeout = (
   payload: NodeCallTimeoutAction['payload']

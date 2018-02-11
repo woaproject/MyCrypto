@@ -49,7 +49,6 @@ export function* pollOfflineStatus(): SagaIterator {
         pingSucceeded: call(nodeConfig.lib.ping.bind(nodeConfig.lib)),
         timeout: call(delay, 5000)
       });
-
       if (pingSucceeded && isOffline) {
         // If we were able to ping but redux says we're offline, mark online
         yield put(

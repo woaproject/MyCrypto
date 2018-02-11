@@ -1,28 +1,29 @@
 import { Task } from 'redux-saga';
 import {
-  AllNodeNames,
+  AllNodeIds,
   NodeCall,
   WorkerKilledAction,
   WorkerProcessingAction,
   WorkerSpawnedAction,
   NodeCallSucceededAction,
   WorkerAction,
-  NodeCallAction
+  NodeCallAction,
+  NodeCallTimeoutAction
 } from 'actions/nodeBalancer';
 import { Reducer } from 'redux';
 import { TypeKeys } from 'actions/nodeBalancer/constants';
 
 interface IWorker {
   task: Task;
-  assignedNode: AllNodeNames;
+  assignedNode: AllNodeIds;
   currentPayload: NodeCall | null;
 }
 
 export interface State {
-  [key: string]: Readonly<IWorker>;
+  [workerId: string]: Readonly<IWorker>;
 }
 
-const INITIAL_STATE = {};
+const INITIAL_STATE: State = {};
 
 const handleWorkerKilled: Reducer<State> = (state: State, { payload }: WorkerKilledAction) => {
   const stateCopy = { ...state };
@@ -40,29 +41,42 @@ const handleWorkerProcessing: Reducer<State> = (
 
 const handleWorkerSpawned: Reducer<State> = (state: State, { payload }: WorkerSpawnedAction) => ({
   ...state,
-  [payload.workerId]: { assignedNode: payload.nodeName, task: payload.task, currentPayload: null }
+  [payload.workerId]: { assignedNode: payload.nodeId, task: payload.task, currentPayload: null }
 });
 
 const handleNodeCallSucceeded: Reducer<State> = (
   state: State,
-  { payload: { callId } }: NodeCallSucceededAction
+  { payload }: NodeCallSucceededAction
 ) => {
-  const workerIdToRemove = Object.entries(state).find(
+  const { nodeCall: { callId } } = payload;
+  const worker = Object.entries(state).find(
     ([_, { currentPayload }]) => (currentPayload ? currentPayload.callId === callId : false)
   );
-
-  console.assert(
-    workerIdToRemove,
-    'WorkerID not found for successful payload, this should never happen'
-  );
-  if (!workerIdToRemove) {
-    throw Error();
+  if (!worker) {
+    throw Error(`Worker not found for a successful request, this should never happen`);
   }
 
-  const stateCopy = { ...state };
-  Reflect.deleteProperty(stateCopy, workerIdToRemove[0]);
+  const [workerId, workerInst] = worker;
 
-  return stateCopy;
+  return { ...state, [workerId]: { ...workerInst, currentPayload: null } };
+};
+
+// This is almost the exact same as the above, abstract it
+const handleNodeCallTimeout: Reducer<State> = (
+  state: State,
+  { payload }: NodeCallTimeoutAction
+) => {
+  const { callId } = payload;
+  const worker = Object.entries(state).find(
+    ([_, { currentPayload }]) => (currentPayload ? currentPayload.callId === callId : false)
+  );
+  if (!worker) {
+    throw Error(`Worker not found for a successful request, this should never happen`);
+  }
+
+  const [workerId, workerInst] = worker;
+
+  return { ...state, [workerId]: { ...workerInst, currentPayload: null } };
 };
 
 export const workers: Reducer<State> = (
@@ -78,6 +92,8 @@ export const workers: Reducer<State> = (
       return handleWorkerProcessing(state, action);
     case TypeKeys.NODE_CALL_SUCCEEDED:
       return handleNodeCallSucceeded(state, action);
+    case TypeKeys.NODE_CALL_TIMEOUT:
+      return handleNodeCallTimeout(state, action);
     default:
       return state;
   }

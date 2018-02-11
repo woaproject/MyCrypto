@@ -15,7 +15,7 @@ import { getBityRatesSaga, getShapeShiftRatesSaga, swapProviderSaga } from './sw
 import wallet from './wallet';
 import { ens } from './ens';
 import { transaction } from './transaction';
-
+import { nodeBalancer } from './node/node';
 export default {
   ens,
   liteSend,
@@ -33,5 +33,6 @@ export default {
   transaction,
   deterministicWallets,
   swapProviderSaga,
-  rates
+  rates,
+  nodeBalancer
 };

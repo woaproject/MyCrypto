@@ -1,4 +1,7 @@
 import { EtherscanNode, InfuraNode, RPCNode } from 'libs/nodes';
+import PRPCNode from 'libs/nodes/rpc';
+import PEtherscanNode from 'libs/nodes/etherscan';
+import PInfuraNode from 'libs/nodes/infura';
 import { TypeKeys, NodeAction } from 'actions/config';
 import { NonWeb3NodeConfigs, Web3NodeConfigs } from 'types/node';
 
@@ -8,7 +11,8 @@ export const INITIAL_STATE: State = {
   eth_mycrypto: {
     network: 'ETH',
     isCustom: false,
-    lib: new RPCNode('https://api.mycryptoapi.com/eth'),
+    lib: RPCNode('https://api.mycryptoapi.com/eth'),
+    pLib: new PRPCNode('https://api.mycryptoapi.com/eth'),
     service: 'MyCrypto',
     estimateGas: true
   },
@@ -16,16 +20,21 @@ export const INITIAL_STATE: State = {
     network: 'ETH',
     isCustom: false,
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://api.etherscan.io/api'),
+    lib: EtherscanNode('https://api.etherscan.io/api'),
+    pLib: new PEtherscanNode('https://api.etherscan.io/api'),
+
     estimateGas: false
   },
   eth_infura: {
     network: 'ETH',
     isCustom: false,
     service: 'infura.io',
-    lib: new InfuraNode('https://mainnet.infura.io/mew'),
+    lib: InfuraNode('https://mainnet.infura.io/mew'),
+    pLib: new PInfuraNode('https://mainnet.infura.io/mew'),
+
     estimateGas: false
-  },
+  }
+  /*
   rop_infura: {
     network: 'Ropsten',
     isCustom: false,
@@ -74,7 +83,7 @@ export const INITIAL_STATE: State = {
     service: 'Expanse.tech',
     lib: new RPCNode('https://node.expanse.tech/'),
     estimateGas: true
-  }
+  }*/
 };
 
 export const staticNodes = (state: State = INITIAL_STATE, action: NodeAction) => {

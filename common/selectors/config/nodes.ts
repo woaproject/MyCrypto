@@ -44,10 +44,15 @@ export const getStaticAltNodeIdToWeb3 = (state: AppState) => {
 export const getStaticNodeFromId = (state: AppState, nodeId: StaticNodeId) =>
   getStaticNodeConfigs(state)[nodeId];
 
+export const getNodeById = (state: AppState, nodeId: string) =>
+  isStaticNodeId(state, nodeId)
+    ? getStaticNodeFromId(state, nodeId)
+    : getCustomNodeFromId(state, nodeId);
+
 export const isStaticNodeId = (state: AppState, nodeId: string): nodeId is StaticNodeWithWeb3Id =>
   Object.keys(getStaticNodeConfigs(state)).includes(nodeId);
 
-const getStaticNodeConfigs = (state: AppState) => getNodes(state).staticNodes;
+export const getStaticNodeConfigs = (state: AppState) => getNodes(state).staticNodes;
 
 export const getStaticNodeConfig = (state: AppState) => {
   const { staticNodes, selectedNode: { nodeId } } = getNodes(state);

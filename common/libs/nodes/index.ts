@@ -1,17 +1,16 @@
-import { INodeConstructor, INode } from 'libs/nodes/INode';
+import { INode } from 'libs/nodes/INode';
 import PRPCNode from './rpc';
 import PInfuraNode from './infura';
 import PEtherscanNode from './etherscan';
 import PCustomNode from './custom';
 import PWeb3Node from './web3';
-import { requester } from 'sagas/node/node';
-type methods = keyof RPCNode;
+import { nodeCallRequester } from 'sagas/node/node';
 
 const handler: ProxyHandler<INode> = {
   get: (target, methodName: string) => {
     const nodeMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(target));
     if (nodeMethods.includes(methodName)) {
-      return requester(methodName);
+      return nodeCallRequester(methodName);
     }
   }
 };

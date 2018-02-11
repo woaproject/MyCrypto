@@ -19,64 +19,130 @@ import { TypeKeys } from 'actions/nodeBalancer/constants';
 export interface INodeStats {
   maxWorkers: number;
   currWorkersById: string[];
-  timeoutThreshold: number;
+  timeoutThresholdMs: number;
   isOffline: boolean;
   requestFailures: number;
   requestFailureThreshold: number;
   avgResponseTime: number;
-  supportedMethods: (keyof RpcNode)[];
+  supportedMethods: { [rpcMethod in keyof RpcNode]: boolean };
 }
 
 export interface State {
-  [key: string]: Readonly<INodeStats>;
+  [nodeId: string]: Readonly<INodeStats>;
 }
 
-//  handle custom node removal
-
-const INITIAL_STATE = {};
+// hard code in the nodes for now
+const INITIAL_STATE: State = {
+  eth_mycrypto: {
+    avgResponseTime: 1,
+    currWorkersById: [],
+    timeoutThresholdMs: 1000,
+    isOffline: false,
+    maxWorkers: 5,
+    requestFailures: 0,
+    requestFailureThreshold: 2,
+    supportedMethods: {
+      client: true,
+      requests: true,
+      ping: true,
+      sendCallRequest: true,
+      getBalance: true,
+      estimateGas: true,
+      getTokenBalance: true,
+      getTokenBalances: true,
+      getTransactionCount: true,
+      getCurrentBlock: true,
+      sendRawTx: true
+    }
+  },
+  eth_ethscan: {
+    avgResponseTime: 1,
+    currWorkersById: [],
+    timeoutThresholdMs: 1000,
+    isOffline: false,
+    maxWorkers: 5,
+    requestFailures: 0,
+    requestFailureThreshold: 2,
+    supportedMethods: {
+      client: true,
+      requests: true,
+      ping: true,
+      sendCallRequest: true,
+      getBalance: true,
+      estimateGas: true,
+      getTokenBalance: true,
+      getTokenBalances: true,
+      getTransactionCount: true,
+      getCurrentBlock: true,
+      sendRawTx: true
+    }
+  },
+  eth_infura: {
+    avgResponseTime: 1,
+    currWorkersById: [],
+    timeoutThresholdMs: 1000,
+    isOffline: false,
+    maxWorkers: 5,
+    requestFailures: 0,
+    requestFailureThreshold: 2,
+    supportedMethods: {
+      client: true,
+      requests: true,
+      ping: true,
+      sendCallRequest: true,
+      getBalance: true,
+      estimateGas: true,
+      getTokenBalance: true,
+      getTokenBalances: true,
+      getTransactionCount: true,
+      getCurrentBlock: true,
+      sendRawTx: true
+    }
+  }
+};
 
 const handleWorkerKilled: Reducer<State> = (
   state: State,
-  { payload: { nodeName, workerId } }: WorkerKilledAction
+  { payload: { nodeId, workerId } }: WorkerKilledAction
 ) => {
-  const nodeToChange = state[nodeName];
+  const nodeToChange = state[nodeId];
   const nextNodeState = {
     ...nodeToChange,
     currWorkersById: nodeToChange.currWorkersById.filter(id => id !== workerId)
   };
-  return { ...state, [nodeName]: nextNodeState };
+  return { ...state, [nodeId]: nextNodeState };
 };
 
 const handleWorkerSpawned: Reducer<State> = (
   state: State,
-  { payload: { nodeName, workerId } }: WorkerSpawnedAction
+  { payload: { nodeId, workerId } }: WorkerSpawnedAction
 ) => {
-  const nodeToChange = state[nodeName];
+  const nodeToChange = state[nodeId];
   const nextNodeState = {
     ...nodeToChange,
     currWorkersById: [...nodeToChange.currWorkersById, workerId]
   };
-  return { ...state, [nodeName]: nextNodeState };
+  return { ...state, [nodeId]: nextNodeState };
 };
 
 const handleNodeOnline: Reducer<State> = (
   state: State,
-  { payload: { nodeName } }: NodeOnlineAction
+  { payload: { nodeId } }: NodeOnlineAction
 ) => ({
   ...state,
-  [nodeName]: {
-    ...state[nodeName],
+  [nodeId]: {
+    ...state[nodeId],
     isOffline: false
   }
 });
 
 const handleNodeOffline: Reducer<State> = (
   state: State,
-  { payload: { nodeName } }: NodeOfflineAction
+  { payload: { nodeId } }: NodeOfflineAction
 ) => ({
   ...state,
-  [nodeName]: {
-    ...state[nodeName],
+  [nodeId]: {
+    ...state[nodeId],
     isOffline: true,
     requestFailures: 0
   }
@@ -84,29 +150,29 @@ const handleNodeOffline: Reducer<State> = (
 
 const handleNodeAdded: Reducer<State> = (
   state: State,
-  { payload: { nodeName, ...nodeStats } }: NodeAddedAction
-) => ({ ...state, [nodeName]: { ...nodeStats } });
+  { payload: { nodeId, ...nodeStats } }: NodeAddedAction
+) => ({ ...state, [nodeId]: { ...nodeStats } });
 
 const handleNodeRemoved: Reducer<State> = (state: State, { payload }: NodeRemovedAction) => {
   const stateCopy = { ...state };
-  Reflect.deleteProperty(state, payload.nodeName);
+  Reflect.deleteProperty(state, payload.nodeId);
   return stateCopy;
 };
 
 const handleNodeCallTimeout: Reducer<State> = (
   state: State,
-  { payload: { nodeName } }: NodeCallTimeoutAction
+  { payload: { nodeId } }: NodeCallTimeoutAction
 ) => ({
   ...state,
-  [nodeName]: {
-    ...state[nodeName],
-    requestFailures: state[nodeName].requestFailures + 1
+  [nodeId]: {
+    ...state[nodeId],
+    requestFailures: state[nodeId].requestFailures + 1
   }
 });
 
 const handleBalancerFlush: Reducer<State> = (state: State, _: BalancerFlushAction) =>
   Object.entries(state).reduce(
-    (obj, [nodeName, nodeStats]) => ({ ...obj, [nodeName]: { ...nodeStats, requestFailures: 0 } }),
+    (obj, [nodeId, nodeStats]) => ({ ...obj, [nodeId]: { ...nodeStats, requestFailures: 0 } }),
     {} as State
   );
 

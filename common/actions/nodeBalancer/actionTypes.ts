@@ -1,16 +1,17 @@
 import { TypeKeys } from './constants';
-import { DefaultNodeNames } from 'config/data';
 import { Task } from 'redux-saga';
 import { INodeStats } from 'reducers/nodeBalancer/nodes';
+import { StaticNodeId } from 'types/node';
 
-export type AllNodeNames = DefaultNodeNames | string;
+export type AllNodeIds = StaticNodeId | string;
 
 export interface NodeCall {
   callId: number;
   rpcMethod: string;
   rpcArgs: string[];
   numOfTimeouts: number;
-  nodeWhiteList?: AllNodeNames;
+  minPriorityNodeList: AllNodeIds[];
+  nodeWhiteList?: AllNodeIds[];
 }
 
 export interface BalancerFlushAction {
@@ -20,34 +21,33 @@ export interface BalancerFlushAction {
 export interface NodeOnlineAction {
   type: TypeKeys.NODE_ONLINE;
   payload: {
-    nodeName: AllNodeNames;
+    nodeId: AllNodeIds;
   };
 }
 
 export interface NodeOfflineAction {
   type: TypeKeys.NODE_OFFLINE;
   payload: {
-    nodeName: AllNodeNames;
+    nodeId: AllNodeIds;
   };
 }
 
-// this is for when new nodes get added dynamically
 export interface NodeAddedAction {
   type: TypeKeys.NODE_ADDED;
   payload: {
-    nodeName: AllNodeNames;
+    nodeId: AllNodeIds;
   } & INodeStats;
 }
 
 export interface NodeRemovedAction {
   type: TypeKeys.NODE_REMOVED;
-  payload: { nodeName: AllNodeNames };
+  payload: { nodeId: AllNodeIds };
 }
 
 export interface WorkerSpawnedAction {
   type: TypeKeys.WORKER_SPAWNED;
   payload: {
-    nodeName: AllNodeNames;
+    nodeId: AllNodeIds;
     workerId: string;
     task: Task;
   };
@@ -64,8 +64,9 @@ export interface WorkerProcessingAction {
 export interface WorkerKilledAction {
   type: TypeKeys.WORKER_KILLED;
   payload: {
-    nodeName: AllNodeNames;
+    nodeId: AllNodeIds;
     workerId: string;
+    error: Error;
   };
 }
 
@@ -76,17 +77,17 @@ export interface NodeCallRequestedAction {
 
 export interface NodeCallTimeoutAction {
   type: TypeKeys.NODE_CALL_TIMEOUT;
-  payload: NodeCall & { nodeName: AllNodeNames };
+  payload: NodeCall & { nodeId: AllNodeIds; error: Error };
 }
 
 export interface NodeCallFailedAction {
   type: TypeKeys.NODE_CALL_FAILED;
-  payload: NodeCall;
+  payload: { error: string; nodeCall: NodeCall };
 }
 
 export interface NodeCallSucceededAction {
   type: TypeKeys.NODE_CALL_SUCCEEDED;
-  payload: NodeCall;
+  payload: { result: string; nodeCall: NodeCall };
 }
 
 export type BalancerAction = BalancerFlushAction;

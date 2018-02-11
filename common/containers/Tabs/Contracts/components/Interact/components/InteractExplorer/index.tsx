@@ -11,7 +11,7 @@ import { Fields } from './components';
 import { setDataField, TSetDataField } from 'actions/transaction';
 import { Data } from 'libs/units';
 import Select from 'react-select';
-import { Web3Node } from 'libs/nodes';
+import Web3Node from 'libs/nodes/web3';
 import RpcNode from 'libs/nodes/rpc';
 
 interface StateProps {
