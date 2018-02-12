@@ -2,7 +2,6 @@ import { AppState } from 'reducers';
 import { State as NodeBalancerState, INodeStats } from 'reducers/nodeBalancer/nodes';
 import { Omit } from 'react-redux';
 import { NodeCall } from 'actions/nodeBalancer';
-import { getNodeById } from 'selectors/config';
 
 const allMethods = [
   'client',
@@ -19,6 +18,11 @@ const allMethods = [
 ];
 
 export const getNodeBalancer = (state: AppState) => state.nodeBalancer;
+
+export const getBalancerConfig = (state: AppState) => getNodeBalancer(state).balancerConfig;
+
+export const isManual = (state: AppState) => getBalancerConfig(state).manual;
+
 export const getNodesState = (state: AppState) => getNodeBalancer(state).nodes;
 
 export type AvailableNodes = {

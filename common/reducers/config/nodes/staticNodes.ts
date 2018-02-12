@@ -33,57 +33,68 @@ export const INITIAL_STATE: State = {
     pLib: new PInfuraNode('https://mainnet.infura.io/mew'),
 
     estimateGas: false
-  }
-  /*
+  },
+
   rop_infura: {
     network: 'Ropsten',
     isCustom: false,
     service: 'infura.io',
-    lib: new InfuraNode('https://ropsten.infura.io/mew'),
+    lib: InfuraNode('https://ropsten.infura.io/mew'),
+    pLib: new PInfuraNode('https://ropsten.infura.io/mew'),
     estimateGas: false
   },
   kov_ethscan: {
     network: 'Kovan',
     isCustom: false,
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://kovan.etherscan.io/api'),
+    pLib: new PEtherscanNode('https://kovan.etherscan.io/api'),
+    lib: EtherscanNode('https://kovan.etherscan.io/api'),
     estimateGas: false
   },
   rin_ethscan: {
     network: 'Rinkeby',
     isCustom: false,
     service: 'Etherscan.io',
-    lib: new EtherscanNode('https://rinkeby.etherscan.io/api'),
+    lib: EtherscanNode('https://rinkeby.etherscan.io/api'),
+    pLib: new PEtherscanNode('https://rinkeby.etherscan.io/api'),
+
     estimateGas: false
   },
   rin_infura: {
     network: 'Rinkeby',
     isCustom: false,
     service: 'infura.io',
-    lib: new InfuraNode('https://rinkeby.infura.io/mew'),
+    lib: InfuraNode('https://rinkeby.infura.io/mew'),
+    pLib: new PInfuraNode('https://rinkeby.infura.io/mew'),
     estimateGas: false
   },
   etc_epool: {
     network: 'ETC',
     isCustom: false,
     service: 'Epool.io',
-    lib: new RPCNode('https://mewapi.epool.io'),
+    lib: RPCNode('https://mewapi.epool.io'),
+    pLib: new PRPCNode('https://mewapi.epool.io'),
+
     estimateGas: false
   },
   ubq: {
     network: 'UBQ',
     isCustom: false,
     service: 'ubiqscan.io',
-    lib: new RPCNode('https://pyrus2.ubiqscan.io'),
+    lib: RPCNode('https://pyrus2.ubiqscan.io'),
+    pLib: new PRPCNode('https://pyrus2.ubiqscan.io'),
+
     estimateGas: true
   },
   exp_tech: {
     network: 'EXP',
     isCustom: false,
     service: 'Expanse.tech',
-    lib: new RPCNode('https://node.expanse.tech/'),
+    lib: RPCNode('https://node.expanse.tech/'),
+    pLib: new PRPCNode('https://node.expanse.tech/'),
+
     estimateGas: true
-  }*/
+  }
 };
 
 export const staticNodes = (state: State = INITIAL_STATE, action: NodeAction) => {

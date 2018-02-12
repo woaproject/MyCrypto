@@ -26,6 +26,13 @@ export interface ChangeNodeAction {
   };
 }
 
+export interface ChangeNetworkAction {
+  type: TypeKeys.CONFIG_NETWORK_CHANGE;
+  payload: {
+    networkId: string;
+  };
+}
+
 /*** Poll offline status ***/
 export interface PollOfflineStatus {
   type: TypeKeys.CONFIG_POLL_OFFLINE_STATUS;
@@ -81,6 +88,8 @@ export interface Web3setNodeAction {
 export type CustomNetworkAction = AddCustomNetworkAction | RemoveCustomNetworkAction;
 
 export type CustomNodeAction = AddCustomNodeAction | RemoveCustomNodeAction;
+
+export type NetworkAction = ChangeNetworkAction;
 
 export type NodeAction =
   | ChangeNodeAction

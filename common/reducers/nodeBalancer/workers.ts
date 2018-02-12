@@ -89,7 +89,7 @@ export const workers: Reducer<State> = (
   action: WorkerAction | NodeCallAction | BalancerAction
 ): State => {
   switch (action.type) {
-    case TypeKeys.NETWORK_SWITCH_SUCCEEDED:
+    case TypeKeys.BALANCER_NETWORK_SWITCH_SUCCEEDED:
       return handleNetworkSwitch(state, action);
     case TypeKeys.WORKER_SPAWNED:
       return handleWorkerSpawned(state, action);

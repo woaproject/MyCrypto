@@ -15,7 +15,6 @@ import {
 import {
   nodeCallRequested,
   NodeCall,
-  workerSpawned,
   NodeCallRequestedAction,
   nodeCallSucceeded,
   workerProcessing,
@@ -30,7 +29,7 @@ import {
   nodeOnline,
   BalancerFlushAction,
   balancerFlush,
-  networkSwitchRequested,
+  balancerNetworkSwitchRequested,
   NetworkSwitchSucceededAction,
   networkSwitchSucceeded
 } from 'actions/nodeBalancer';
@@ -43,10 +42,9 @@ import {
   getOffline,
   getNodeById,
   getAllNodesOfNetworkId,
-  getNetworkConfig,
   getSelectedNetwork
 } from 'selectors/config';
-import { toggleOffline } from 'actions/config';
+import { toggleOffline, ChangeNetworkAction, TypeKeys as ConfigTypeKeys } from 'actions/config';
 import { StaticNodeConfig, CustomNodeConfig, NodeConfig } from '../../../shared/types/node';
 import { INodeStats } from 'reducers/nodeBalancer/nodes';
 import { IWorker } from 'reducers/nodeBalancer/workers';
@@ -72,7 +70,7 @@ interface IChannels {
 const channels: IChannels = {};
 
 function* networkSwitch(): SagaIterator {
-  yield put(networkSwitchRequested());
+  yield put(balancerNetworkSwitchRequested());
 
   //flush all existing requests
   yield put(balancerFlush());
@@ -154,7 +152,7 @@ function* networkSwitch(): SagaIterator {
       nodeStats: { ...accu.nodeStats, [currNode.nodeId]: currNode.stats },
       workers: { ...accu.workers, ...currNode.workers }
     }),
-    {} as NetworkSwitchSucceededAction['payload']
+    { nodeStats: {}, workers: {} } as NetworkSwitchSucceededAction['payload']
   );
 
   yield put(networkSwitchSucceeded(networkSwitchPayload));
@@ -367,6 +365,7 @@ function* flushHandler(_: BalancerFlushAction): SagaIterator {
 export function* nodeBalancer() {
   yield all([
     call(networkSwitch),
+    takeEvery(ConfigTypeKeys.CONFIG_NETWORK_CHANGE, networkSwitch),
     takeEvery(TypeKeys.NODE_OFFLINE, watchOfflineNode),
     fork(handleNodeCallRequests),
     takeEvery(TypeKeys.NODE_CALL_TIMEOUT, handleCallTimeouts),

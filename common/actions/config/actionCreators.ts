@@ -33,6 +33,16 @@ export function changeNode(
   };
 }
 
+export type TChangeNetwork = typeof changeNetwork;
+export function changeNetwork(
+  payload: interfaces.ChangeNetworkAction['payload']
+): interfaces.ChangeNetworkAction {
+  return {
+    type: TypeKeys.CONFIG_NETWORK_CHANGE,
+    payload
+  };
+}
+
 export type TPollOfflineStatus = typeof pollOfflineStatus;
 export function pollOfflineStatus(): interfaces.PollOfflineStatus {
   return {

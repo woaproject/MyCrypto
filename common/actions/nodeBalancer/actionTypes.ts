@@ -62,12 +62,12 @@ export interface WorkerProcessingAction {
   };
 }
 
-export interface NetworkSwitchRequestedAction {
-  type: TypeKeys.NETWORK_SWTICH_REQUESTED;
+export interface BalancerNetworkSwitchRequestedAction {
+  type: TypeKeys.BALANCER_NETWORK_SWTICH_REQUESTED;
 }
 
 export interface NetworkSwitchSucceededAction {
-  type: TypeKeys.NETWORK_SWITCH_SUCCEEDED;
+  type: TypeKeys.BALANCER_NETWORK_SWITCH_SUCCEEDED;
   payload: {
     nodeStats: NodeBalancerState['nodes'];
     workers: NodeBalancerState['workers'];
@@ -103,9 +103,20 @@ export interface NodeCallSucceededAction {
   payload: { result: string; nodeCall: NodeCall };
 }
 
+export interface BalancerAutoAction {
+  type: TypeKeys.BALANCER_AUTO;
+}
+
+export interface BalancerManualAction {
+  type: TypeKeys.BALANCER_MANUAL;
+  payload: { nodeId: string };
+}
+
 export type BalancerAction =
   | BalancerFlushAction
-  | NetworkSwitchRequestedAction
+  | BalancerAutoAction
+  | BalancerManualAction
+  | BalancerNetworkSwitchRequestedAction
   | NetworkSwitchSucceededAction;
 
 export type NodeAction = NodeOnlineAction | NodeOfflineAction | NodeAddedAction | NodeRemovedAction;

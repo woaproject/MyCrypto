@@ -13,12 +13,9 @@ import {
   BalancerFlushAction,
   BalancerAction,
   NodeRemovedAction,
-  NetworkSwitchRequestedAction,
   NetworkSwitchSucceededAction
 } from 'actions/nodeBalancer';
 import { TypeKeys } from 'actions/nodeBalancer/constants';
-import { configuredStore } from 'store';
-import { getNodeConfig } from 'selectors/config';
 
 export interface INodeStats {
   isCustom: boolean;
@@ -141,7 +138,7 @@ export const nodes: Reducer<State> = (
     case TypeKeys.BALANCER_FLUSH:
       return handleBalancerFlush(state, action);
 
-    case TypeKeys.NETWORK_SWITCH_SUCCEEDED:
+    case TypeKeys.BALANCER_NETWORK_SWITCH_SUCCEEDED:
       return handleNetworkSwitch(state, action);
     default:
       return state;

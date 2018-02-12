@@ -1,7 +1,7 @@
 import { ChangeLanguageAction, SetLatestBlockAction, MetaAction } from 'actions/config';
 import { TypeKeys } from 'actions/config/constants';
 import {
-  NetworkSwitchRequestedAction,
+  BalancerNetworkSwitchRequestedAction,
   TypeKeys as NodeBalancerTypeKeys,
   NodeBalancerAction
 } from 'actions/nodeBalancer';
@@ -20,7 +20,7 @@ const INITIAL_STATE: State = {
   latestBlock: '???'
 };
 
-function handleNetworkSwitchRequested(state: State, _: NetworkSwitchRequestedAction) {
+function handleNetworkSwitchRequested(state: State, _: BalancerNetworkSwitchRequestedAction) {
   return {
     ...state,
     offline: true
@@ -69,7 +69,7 @@ export function meta(state: State = INITIAL_STATE, action: MetaAction | NodeBala
     case TypeKeys.CONFIG_SET_LATEST_BLOCK:
       return setLatestBlock(state, action);
 
-    case NodeBalancerTypeKeys.NETWORK_SWTICH_REQUESTED:
+    case NodeBalancerTypeKeys.BALANCER_NETWORK_SWTICH_REQUESTED:
       return handleNetworkSwitchRequested(state, action);
     default:
       return state;

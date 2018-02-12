@@ -3,7 +3,8 @@ import {
   CustomNetworkConfig,
   StaticNetworkConfig,
   StaticNetworkIds,
-  NetworkContract
+  NetworkContract,
+  NetworkConfig
 } from 'types/network';
 import { getNodeConfig } from 'selectors/config';
 const getConfig = (state: AppState) => state.config;
@@ -44,7 +45,7 @@ export const getStaticNetworkConfig = (state: AppState): StaticNetworkConfig | u
   return defaultNetwork;
 };
 
-export const getSelectedNetwork = (state: AppState) => getNodeConfig(state).network;
+export const getSelectedNetwork = (state: AppState) => getNetworks(state).selectedNetwork;
 
 export const getCustomNetworkConfig = (state: AppState): CustomNetworkConfig | undefined => {
   const selectedNetwork = getSelectedNetwork(state);
@@ -74,3 +75,18 @@ export const getNetworkContracts = (state: AppState): NetworkContract[] | null =
 export const getCustomNetworkConfigs = (state: AppState) => getNetworks(state).customNetworks;
 
 export const getStaticNetworkConfigs = (state: AppState) => getNetworks(state).staticNetworks;
+
+export type NetworkOptions = (NetworkConfig & { networkId: string })[];
+
+export const getNetworkOptions = (state: AppState): NetworkOptions => {
+  const customNetworks = getCustomNetworkConfigs(state);
+  const staticNetworks = getStaticNetworkConfigs(state);
+  const allNetworks: { [networkId: string]: NetworkConfig } = {
+    ...customNetworks,
+    ...staticNetworks
+  };
+  return Object.entries(allNetworks).map(([networkId, network]) => ({
+    ...network,
+    networkId
+  }));
+};

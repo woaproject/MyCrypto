@@ -12,7 +12,7 @@ import {
   NodeOnlineAction,
   NodeRemovedAction,
   TypeKeys,
-  NetworkSwitchRequestedAction,
+  BalancerNetworkSwitchRequestedAction,
   NetworkSwitchSucceededAction
 } from 'actions/nodeBalancer';
 
@@ -83,10 +83,10 @@ export const nodeCallSucceeded = (
   payload
 });
 
-export const networkSwitchRequested = (): NetworkSwitchRequestedAction => ({
-  type: TypeKeys.NETWORK_SWTICH_REQUESTED
+export const balancerNetworkSwitchRequested = (): BalancerNetworkSwitchRequestedAction => ({
+  type: TypeKeys.BALANCER_NETWORK_SWTICH_REQUESTED
 });
 
 export const networkSwitchSucceeded = (
   payload: NetworkSwitchSucceededAction['payload']
-): NetworkSwitchSucceededAction => ({ type: TypeKeys.NETWORK_SWITCH_SUCCEEDED, payload });
+): NetworkSwitchSucceededAction => ({ type: TypeKeys.BALANCER_NETWORK_SWITCH_SUCCEEDED, payload });
