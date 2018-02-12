@@ -1,5 +1,10 @@
 import { ChangeLanguageAction, SetLatestBlockAction, MetaAction } from 'actions/config';
 import { TypeKeys } from 'actions/config/constants';
+import {
+  NetworkSwitchRequestedAction,
+  TypeKeys as NodeBalancerTypeKeys,
+  NodeBalancerAction
+} from 'actions/nodeBalancer';
 
 export interface State {
   languageSelection: string;
@@ -14,6 +19,13 @@ const INITIAL_STATE: State = {
   autoGasLimit: true,
   latestBlock: '???'
 };
+
+function handleNetworkSwitchRequested(state: State, _: NetworkSwitchRequestedAction) {
+  return {
+    ...state,
+    offline: true
+  };
+}
 
 function changeLanguage(state: State, action: ChangeLanguageAction): State {
   return {
@@ -43,18 +55,22 @@ function setLatestBlock(state: State, action: SetLatestBlockAction): State {
   };
 }
 
-export function meta(state: State = INITIAL_STATE, action: MetaAction): State {
+export function meta(state: State = INITIAL_STATE, action: MetaAction | NodeBalancerAction): State {
   switch (action.type) {
     case TypeKeys.CONFIG_LANGUAGE_CHANGE:
       return changeLanguage(state, action);
 
     case TypeKeys.CONFIG_TOGGLE_OFFLINE:
       return toggleOffline(state);
+
     case TypeKeys.CONFIG_TOGGLE_AUTO_GAS_LIMIT:
       return toggleAutoGasLimitEstimation(state);
 
     case TypeKeys.CONFIG_SET_LATEST_BLOCK:
       return setLatestBlock(state, action);
+
+    case NodeBalancerTypeKeys.NETWORK_SWTICH_REQUESTED:
+      return handleNetworkSwitchRequested(state, action);
     default:
       return state;
   }

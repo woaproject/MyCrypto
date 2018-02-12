@@ -46,7 +46,7 @@ export function* pollOfflineStatus(): SagaIterator {
     const shouldPing = !hasCheckedOnline || navigator.onLine === isOffline;
     if (shouldPing && !document.hidden) {
       const { pingSucceeded } = yield race({
-        pingSucceeded: call(nodeConfig.lib.ping.bind(nodeConfig.lib)),
+        pingSucceeded: call(nodeConfig.lib.ping),
         timeout: call(delay, 5000)
       });
       if (pingSucceeded && isOffline) {

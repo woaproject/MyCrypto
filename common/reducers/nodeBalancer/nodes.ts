@@ -12,11 +12,16 @@ import {
   NodeCallAction,
   BalancerFlushAction,
   BalancerAction,
-  NodeRemovedAction
+  NodeRemovedAction,
+  NetworkSwitchRequestedAction,
+  NetworkSwitchSucceededAction
 } from 'actions/nodeBalancer';
 import { TypeKeys } from 'actions/nodeBalancer/constants';
+import { configuredStore } from 'store';
+import { getNodeConfig } from 'selectors/config';
 
 export interface INodeStats {
+  isCustom: boolean;
   maxWorkers: number;
   currWorkersById: string[];
   timeoutThresholdMs: number;
@@ -32,74 +37,12 @@ export interface State {
 }
 
 // hard code in the nodes for now
-const INITIAL_STATE: State = {
-  eth_mycrypto: {
-    avgResponseTime: 1,
-    currWorkersById: [],
-    timeoutThresholdMs: 1000,
-    isOffline: false,
-    maxWorkers: 5,
-    requestFailures: 0,
-    requestFailureThreshold: 2,
-    supportedMethods: {
-      client: true,
-      requests: true,
-      ping: true,
-      sendCallRequest: true,
-      getBalance: true,
-      estimateGas: true,
-      getTokenBalance: true,
-      getTokenBalances: true,
-      getTransactionCount: true,
-      getCurrentBlock: true,
-      sendRawTx: true
-    }
-  },
-  eth_ethscan: {
-    avgResponseTime: 1,
-    currWorkersById: [],
-    timeoutThresholdMs: 1000,
-    isOffline: false,
-    maxWorkers: 5,
-    requestFailures: 0,
-    requestFailureThreshold: 2,
-    supportedMethods: {
-      client: true,
-      requests: true,
-      ping: true,
-      sendCallRequest: true,
-      getBalance: true,
-      estimateGas: true,
-      getTokenBalance: true,
-      getTokenBalances: true,
-      getTransactionCount: true,
-      getCurrentBlock: true,
-      sendRawTx: true
-    }
-  },
-  eth_infura: {
-    avgResponseTime: 1,
-    currWorkersById: [],
-    timeoutThresholdMs: 1000,
-    isOffline: false,
-    maxWorkers: 5,
-    requestFailures: 0,
-    requestFailureThreshold: 2,
-    supportedMethods: {
-      client: true,
-      requests: true,
-      ping: true,
-      sendCallRequest: true,
-      getBalance: true,
-      estimateGas: true,
-      getTokenBalance: true,
-      getTokenBalances: true,
-      getTransactionCount: true,
-      getCurrentBlock: true,
-      sendRawTx: true
-    }
-  }
-};
+const INITIAL_STATE: State = {};
+
+const handleNetworkSwitch: Reducer<State> = (
+  _: State,
+  { payload: { nodeStats } }: NetworkSwitchSucceededAction
+) => nodeStats;
 
 const handleWorkerKilled: Reducer<State> = (
   state: State,
@@ -197,6 +140,9 @@ export const nodes: Reducer<State> = (
       return handleNodeCallTimeout(state, action);
     case TypeKeys.BALANCER_FLUSH:
       return handleBalancerFlush(state, action);
+
+    case TypeKeys.NETWORK_SWITCH_SUCCEEDED:
+      return handleNetworkSwitch(state, action);
     default:
       return state;
   }

@@ -2,6 +2,7 @@ import { TypeKeys } from './constants';
 import { Task } from 'redux-saga';
 import { INodeStats } from 'reducers/nodeBalancer/nodes';
 import { StaticNodeId } from 'types/node';
+import { State as NodeBalancerState } from 'reducers/nodeBalancer';
 
 export type AllNodeIds = StaticNodeId | string;
 
@@ -61,6 +62,18 @@ export interface WorkerProcessingAction {
   };
 }
 
+export interface NetworkSwitchRequestedAction {
+  type: TypeKeys.NETWORK_SWTICH_REQUESTED;
+}
+
+export interface NetworkSwitchSucceededAction {
+  type: TypeKeys.NETWORK_SWITCH_SUCCEEDED;
+  payload: {
+    nodeStats: NodeBalancerState['nodes'];
+    workers: NodeBalancerState['workers'];
+  };
+}
+
 export interface WorkerKilledAction {
   type: TypeKeys.WORKER_KILLED;
   payload: {
@@ -90,7 +103,10 @@ export interface NodeCallSucceededAction {
   payload: { result: string; nodeCall: NodeCall };
 }
 
-export type BalancerAction = BalancerFlushAction;
+export type BalancerAction =
+  | BalancerFlushAction
+  | NetworkSwitchRequestedAction
+  | NetworkSwitchSucceededAction;
 
 export type NodeAction = NodeOnlineAction | NodeOfflineAction | NodeAddedAction | NodeRemovedAction;
 

@@ -1,7 +1,6 @@
 import { delay, SagaIterator, buffers, channel, Task, Channel, takeEvery } from 'redux-saga';
 import {
   call,
-  cancel,
   fork,
   put,
   take,
@@ -29,19 +28,28 @@ import {
   NodeCallTimeoutAction,
   NodeOfflineAction,
   nodeOnline,
-  BalancerFlushAction
+  BalancerFlushAction,
+  balancerFlush,
+  networkSwitchRequested,
+  NetworkSwitchSucceededAction,
+  networkSwitchSucceeded
 } from 'actions/nodeBalancer';
 import {
-  getAvailableNodes,
-  AvailableNodes,
   getNodeStatsById,
   getAllMethodsAvailable,
   getAvailableNodeId
 } from 'selectors/nodeBalancer';
-import { getOffline, getNodeById } from 'selectors/config';
+import {
+  getOffline,
+  getNodeById,
+  getAllNodesOfNetworkId,
+  getNetworkConfig,
+  getSelectedNetwork
+} from 'selectors/config';
 import { toggleOffline } from 'actions/config';
 import { StaticNodeConfig, CustomNodeConfig, NodeConfig } from '../../../shared/types/node';
 import { INodeStats } from 'reducers/nodeBalancer/nodes';
+import { IWorker } from 'reducers/nodeBalancer/workers';
 
 // need to check this arbitary number
 const MAX_NODE_CALL_TIMEOUTS = 3;
@@ -63,36 +71,93 @@ interface IChannels {
 
 const channels: IChannels = {};
 
-function* initAndChannelNodePool(): SagaIterator {
-  console.log('Initializing channel and node pool started');
-  const availableNodes: AvailableNodes = yield select(getAvailableNodes);
-  const availableNodesArr = Object.entries(availableNodes);
+function* networkSwitch(): SagaIterator {
+  yield put(networkSwitchRequested());
 
-  // if there are no available nodes during the initialization, put the app in an offline state
-  if (availableNodesArr.length === 0) {
-    const isOffline: boolean = yield select(getOffline);
-    if (!isOffline) {
-      yield put(toggleOffline());
-    }
+  //flush all existing requests
+  yield put(balancerFlush());
+
+  const network: string = yield select(getSelectedNetwork);
+  const nodes: {
+    [x: string]: NodeConfig;
+  } = yield select(getAllNodesOfNetworkId, network);
+
+  interface Workers {
+    [workerId: string]: IWorker;
   }
+  /**
+   *
+   * @description Handles checking if a node is online or not, and adding it to the node balancer
+   * @param {string} nodeId
+   * @param {NodeConfig} nodeConfig
+   */
+  function* handleAddingNode(nodeId: string, nodeConfig: NodeConfig) {
+    const startTime = new Date();
+    const nodeIsOnline: boolean = yield call(checkNodeConnectivity, nodeId, false);
+    const endTime = new Date();
+    const avgResponseTime = +endTime - +startTime;
+    const stats: INodeStats = {
+      avgResponseTime,
+      isOffline: !nodeIsOnline,
+      isCustom: nodeConfig.isCustom,
+      timeoutThresholdMs: 2000,
+      currWorkersById: [],
+      maxWorkers: 3,
+      requestFailures: 0,
+      requestFailureThreshold: 2,
+      supportedMethods: {
+        client: true,
+        requests: true,
+        ping: true,
+        sendCallRequest: true,
+        getBalance: true,
+        estimateGas: true,
+        getTokenBalance: true,
+        getTokenBalances: true,
+        getTransactionCount: true,
+        getCurrentBlock: true,
+        sendRawTx: true
+      }
+    };
 
-  // make a channel per available node and init its workers up to the maxiumum allowed workers
-  for (const [nodeId, nodeConfig] of availableNodesArr) {
     const nodeChannel: Channel<NodeCall> = yield call(channel, buffers.expanding(10));
     channels[nodeId] = nodeChannel;
 
+    const workers: Workers = {};
     for (
-      let workerNumber = nodeConfig.currWorkersById.length;
-      workerNumber < nodeConfig.maxWorkers;
+      let workerNumber = stats.currWorkersById.length;
+      workerNumber < stats.maxWorkers;
       workerNumber++
     ) {
       const workerId = `${nodeId}_worker_${workerNumber}`;
       const workerTask: Task = yield spawn(spawnWorker, workerId, nodeId, nodeChannel);
       console.log(`Worker ${workerId} spawned for ${nodeId}`);
-      yield put(workerSpawned({ nodeId, workerId, task: workerTask }));
+      stats.currWorkersById.push(workerId);
+      const worker: IWorker = { assignedNode: nodeId, currentPayload: null, task: workerTask };
+      workers[workerId] = worker;
     }
+
+    return { nodeId, stats, workers };
   }
-  console.log('Initializing channel and node pool finished');
+
+  const nodeEntries = Object.entries(nodes).map(([nodeId, nodeConfig]) =>
+    call(handleAddingNode, nodeId, nodeConfig)
+  );
+
+  // process adding all nodes in parallel
+  const processedNodes: { nodeId: string; stats: INodeStats; workers: Workers }[] = yield all(
+    nodeEntries
+  );
+
+  const networkSwitchPayload = processedNodes.reduce(
+    (accu, currNode) => ({
+      nodeStats: { ...accu.nodeStats, [currNode.nodeId]: currNode.stats },
+      workers: { ...accu.workers, ...currNode.workers }
+    }),
+    {} as NetworkSwitchSucceededAction['payload']
+  );
+
+  yield put(networkSwitchSucceeded(networkSwitchPayload));
 }
 
 function* handleNodeCallRequests(): SagaIterator {
@@ -100,7 +165,9 @@ function* handleNodeCallRequests(): SagaIterator {
   while (true) {
     const { payload }: NodeCallRequestedAction = yield take(requestChan);
     // check if the app is offline
-
+    if (yield select(getOffline)) {
+      yield call(delay, 2000);
+    }
     // wait until its back online
 
     // get an available nodeId to put the action to the channel
@@ -148,7 +215,11 @@ function* handleCallTimeouts({
   }
 }
 
-function* watchOfflineNode({ payload: { nodeId } }: NodeOfflineAction) {
+/**
+ * @description polls the offline state of a node, then returns control to caller when it comes back online
+ * @param {string} nodeId
+ */
+function* checkNodeConnectivity(nodeId: string, poll: boolean = true) {
   const nodeConfig: NodeConfig = yield select(getNodeById, nodeId);
   while (true) {
     try {
@@ -159,25 +230,33 @@ function* watchOfflineNode({ payload: { nodeId } }: NodeOfflineAction) {
       });
       if (lb) {
         console.log(`${nodeId} online!`);
-        yield put(nodeOnline({ nodeId }));
-
-        // check if all methods are available after this node is online
-        const isAllMethodsAvailable: boolean = yield select(getAllMethodsAvailable);
-
-        // if they are, put app in online state
-        if (isAllMethodsAvailable) {
-          const appIsOffline: boolean = yield select(getOffline);
-          if (appIsOffline) {
-            yield put(toggleOffline());
-          }
-        }
+        return true;
       }
     } catch (error) {
+      if (!poll) {
+        return false;
+      }
       yield call(delay, 5000);
       console.info(error);
     }
-
     console.log(`${nodeId} still offline`);
+  }
+}
+
+function* watchOfflineNode({ payload: { nodeId } }: NodeOfflineAction) {
+  yield call(checkNodeConnectivity, nodeId);
+
+  yield put(nodeOnline({ nodeId }));
+
+  // check if all methods are available after this node is online
+  const isAllMethodsAvailable: boolean = yield select(getAllMethodsAvailable);
+
+  // if they are, put app in online state
+  if (isAllMethodsAvailable) {
+    const appIsOffline: boolean = yield select(getOffline);
+    if (appIsOffline) {
+      yield put(toggleOffline());
+    }
   }
 }
 
@@ -287,7 +366,7 @@ function* flushHandler(_: BalancerFlushAction): SagaIterator {
 
 export function* nodeBalancer() {
   yield all([
-    call(initAndChannelNodePool),
+    call(networkSwitch),
     takeEvery(TypeKeys.NODE_OFFLINE, watchOfflineNode),
     fork(handleNodeCallRequests),
     takeEvery(TypeKeys.NODE_CALL_TIMEOUT, handleCallTimeouts),

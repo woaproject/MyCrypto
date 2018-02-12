@@ -8,12 +8,14 @@ import {
   NodeCallSucceededAction,
   WorkerAction,
   NodeCallAction,
-  NodeCallTimeoutAction
+  NodeCallTimeoutAction,
+  NetworkSwitchSucceededAction,
+  BalancerAction
 } from 'actions/nodeBalancer';
 import { Reducer } from 'redux';
 import { TypeKeys } from 'actions/nodeBalancer/constants';
 
-interface IWorker {
+export interface IWorker {
   task: Task;
   assignedNode: AllNodeIds;
   currentPayload: NodeCall | null;
@@ -24,6 +26,9 @@ export interface State {
 }
 
 const INITIAL_STATE: State = {};
+
+const handleNetworkSwitch: Reducer<State> = (_: State, { payload }: NetworkSwitchSucceededAction) =>
+  payload.workers;
 
 const handleWorkerKilled: Reducer<State> = (state: State, { payload }: WorkerKilledAction) => {
   const stateCopy = { ...state };
@@ -81,9 +86,11 @@ const handleNodeCallTimeout: Reducer<State> = (
 
 export const workers: Reducer<State> = (
   state: State = INITIAL_STATE,
-  action: WorkerAction | NodeCallAction
+  action: WorkerAction | NodeCallAction | BalancerAction
 ): State => {
   switch (action.type) {
+    case TypeKeys.NETWORK_SWITCH_SUCCEEDED:
+      return handleNetworkSwitch(state, action);
     case TypeKeys.WORKER_SPAWNED:
       return handleWorkerSpawned(state, action);
     case TypeKeys.WORKER_KILLED:

@@ -9,7 +9,8 @@ import {
   StaticNodeConfig,
   StaticNodeId,
   Web3NodeConfig,
-  StaticNodeWithWeb3Id
+  StaticNodeWithWeb3Id,
+  NodeConfig
 } from 'types/node';
 
 const getConfig = (state: AppState) => state.config;
@@ -48,6 +49,22 @@ export const getNodeById = (state: AppState, nodeId: string) =>
   isStaticNodeId(state, nodeId)
     ? getStaticNodeFromId(state, nodeId)
     : getCustomNodeFromId(state, nodeId);
+
+const getNodesOfNetworkId = (nodes: { [key: string]: NodeConfig }, networkId: string) => {
+  const allNodesOfNetworkId: { [key: string]: NodeConfig } = {};
+  return Object.entries(nodes).reduce((allNodes, [currNodeId, currNodeConfig]) => {
+    if (currNodeConfig.network !== networkId) {
+      return allNodes;
+    }
+    return { ...allNodes, [currNodeId]: currNodeConfig };
+  }, allNodesOfNetworkId);
+};
+
+export const getAllNodesOfNetworkId = (state: AppState, networkId: string) => {
+  const staticNodesOfNetwork = getNodesOfNetworkId(getStaticNodeConfigs(state), networkId);
+  const customNodesOfNetwork = getNodesOfNetworkId(getCustomNodeConfigs(state), networkId);
+  return { ...staticNodesOfNetwork, ...customNodesOfNetwork };
+};
 
 export const isStaticNodeId = (state: AppState, nodeId: string): nodeId is StaticNodeWithWeb3Id =>
   Object.keys(getStaticNodeConfigs(state)).includes(nodeId);

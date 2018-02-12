@@ -11,7 +11,9 @@ import {
   NodeOfflineAction,
   NodeOnlineAction,
   NodeRemovedAction,
-  TypeKeys
+  TypeKeys,
+  NetworkSwitchRequestedAction,
+  NetworkSwitchSucceededAction
 } from 'actions/nodeBalancer';
 
 export const balancerFlush = (): BalancerFlushAction => ({
@@ -80,3 +82,11 @@ export const nodeCallSucceeded = (
   type: TypeKeys.NODE_CALL_SUCCEEDED,
   payload
 });
+
+export const networkSwitchRequested = (): NetworkSwitchRequestedAction => ({
+  type: TypeKeys.NETWORK_SWTICH_REQUESTED
+});
+
+export const networkSwitchSucceeded = (
+  payload: NetworkSwitchSucceededAction['payload']
+): NetworkSwitchSucceededAction => ({ type: TypeKeys.NETWORK_SWITCH_SUCCEEDED, payload });

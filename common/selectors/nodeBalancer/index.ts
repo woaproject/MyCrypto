@@ -2,6 +2,7 @@ import { AppState } from 'reducers';
 import { State as NodeBalancerState, INodeStats } from 'reducers/nodeBalancer/nodes';
 import { Omit } from 'react-redux';
 import { NodeCall } from 'actions/nodeBalancer';
+import { getNodeById } from 'selectors/config';
 
 const allMethods = [
   'client',
@@ -18,7 +19,7 @@ const allMethods = [
 ];
 
 export const getNodeBalancer = (state: AppState) => state.nodeBalancer;
-export const getNodes = (state: AppState) => getNodeBalancer(state).nodes;
+export const getNodesState = (state: AppState) => getNodeBalancer(state).nodes;
 
 export type AvailableNodes = {
   [nodeId in keyof NodeBalancerState]: Omit<NodeBalancerState[nodeId], 'isOffline'> & {
@@ -31,7 +32,7 @@ export type AvailableNodes = {
  * @param state
  */
 export const getAvailableNodes = (state: AppState): AvailableNodes => {
-  const nodes = getNodes(state);
+  const nodes = getNodesState(state);
   const initialState: AvailableNodes = {};
 
   const isAvailable = (node: NodeBalancerState[string]): node is AvailableNodes['string'] =>
@@ -124,4 +125,4 @@ export const getWorkersById = (state: AppState, workerId: string) => getWorkers(
 export const getNodeStatsById = (
   state: AppState,
   nodeId: string
-): Readonly<INodeStats> | undefined => getNodes(state)[nodeId];
+): Readonly<INodeStats> | undefined => getNodesState(state)[nodeId];
