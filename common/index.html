@@ -63,28 +63,38 @@
 
   <script>
     (function () {
+      console.log('In BB check!')
       var badBrowser = false;
 
       try {
+        console.log('In bad browser try!')
         // Let and const
         eval('let a = 1;');
         eval('const b = 1');
+        console.log('after let/const')
 
         // Local storage
         window.localStorage.setItem('test', 'test');
         window.localStorage.removeItem('test');
+        console.log('after local storage')        
 
         // Flexbox
         var el = document.createElement('div');
         el.style.display = 'flex';
+        console.log('after flex box create')                
         if (el.style.display !== 'flex') {
+          console.log('In BB flex if')
           badBrowser = false;
         }
+        console.log('after flex box if')
       } catch (err) {
+        console.log('In BB catch!')
+        console.log(err)
         badBrowser = true;
       }
 
       if (badBrowser) {
+        console.log('BB was set to TRUE')
         var el = document.getElementsByClassName('BadBrowser')[0];
         el.className += ' is-open';
         // Dumb check for known mobile OS's. Not important to catch all, just
