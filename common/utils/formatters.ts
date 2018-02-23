@@ -1,4 +1,6 @@
+import BN from 'bn.js';
 import { Wei } from 'libs/units';
+import { stripHexPrefix } from 'libs/values';
 
 export function toFixedIfLarger(num: number, fixedSize: number = 6): string {
   return parseFloat(num.toFixed(fixedSize)).toString();
@@ -108,4 +110,12 @@ export function bytesToHuman(bytes: number) {
   const sizes = ['b', 'kb', 'mb', 'gb', 'tb'];
   const i = Math.round(Math.floor(Math.log(bytes) / Math.log(1024)));
   return Math.round(bytes / Math.pow(1024, i)) + ' ' + sizes[i];
+}
+
+export function ensV3Url(name: string) {
+  return `https://mycrypto.com/?ensname=${name}#ens`;
+}
+
+export function hexToNumber(hex: string) {
+  return new BN(stripHexPrefix(hex)).toNumber();
 }

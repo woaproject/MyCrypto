@@ -1,13 +1,14 @@
 import { Identicon, UnitDisplay } from 'components/ui';
-import { NetworkConfig } from 'config';
 import { IWallet, Balance, TrezorWallet, LedgerWallet } from 'libs/wallet';
 import React from 'react';
 import translate from 'translations';
 import './AccountInfo.scss';
 import Spinner from 'components/ui/Spinner';
-import { getNetworkConfig } from 'selectors/config';
+import { getNetworkConfig, getOffline } from 'selectors/config';
 import { AppState } from 'reducers';
 import { connect } from 'react-redux';
+import { NetworkConfig } from 'types/network';
+import { TSetAccountBalance, setAccountBalance } from 'actions/wallet';
 
 interface OwnProps {
   wallet: IWallet;
@@ -16,6 +17,7 @@ interface OwnProps {
 interface StateProps {
   balance: Balance;
   network: NetworkConfig;
+  isOffline: boolean;
 }
 
 interface State {
@@ -24,7 +26,11 @@ interface State {
   confirmAddr: boolean;
 }
 
-type Props = OwnProps & StateProps;
+interface DispatchProps {
+  setAccountBalance: TSetAccountBalance;
+}
+
+type Props = OwnProps & StateProps & DispatchProps;
 
 class AccountInfo extends React.Component<Props, State> {
   public state = {
@@ -33,8 +39,8 @@ class AccountInfo extends React.Component<Props, State> {
     confirmAddr: false
   };
 
-  public async setAddressFromWallet() {
-    const address = await this.props.wallet.getAddressString();
+  public setAddressFromWallet() {
+    const address = this.props.wallet.getAddressString();
     if (address !== this.state.address) {
       this.setState({ address });
     }
@@ -64,9 +70,16 @@ class AccountInfo extends React.Component<Props, State> {
   };
 
   public render() {
-    const { network, balance } = this.props;
+    const { network, balance, isOffline } = this.props;
     const { address, showLongBalance, confirmAddr } = this.state;
-    const { blockExplorer, tokenExplorer } = network;
+    let blockExplorer;
+    let tokenExplorer;
+    if (!network.isCustom) {
+      // this is kind of ugly but its the result of typeguards, maybe we can find a cleaner solution later on such as just dedicating it to a selector
+      blockExplorer = network.blockExplorer;
+      tokenExplorer = network.tokenExplorer;
+    }
+
     const wallet = this.props.wallet as LedgerWallet | TrezorWallet;
     return (
       <div className="AccountInfo">
@@ -108,23 +121,35 @@ class AccountInfo extends React.Component<Props, State> {
         <div className="AccountInfo-section">
           <h5 className="AccountInfo-section-header">{translate('sidebar_AccountBal')}</h5>
           <ul className="AccountInfo-list">
-            <li className="AccountInfo-list-item">
+            <li className="AccountInfo-list-item AccountInfo-balance">
               <span
-                className="AccountInfo-list-item-clickable mono wrap"
+                className="AccountInfo-list-item-clickable AccountInfo-balance-amount mono wrap"
                 onClick={this.toggleShowLongBalance}
               >
-                {balance.isPending ? (
-                  <Spinner />
-                ) : (
-                  <UnitDisplay
-                    value={balance.wei}
-                    unit={'ether'}
-                    displayShortBalance={!showLongBalance}
-                    checkOffline={true}
-                  />
-                )}
+                <UnitDisplay
+                  value={balance.wei}
+                  unit={'ether'}
+                  displayShortBalance={!showLongBalance}
+                  checkOffline={true}
+                  symbol={balance.wei ? network.name : null}
+                />
               </span>
-              {!balance.isPending ? balance.wei ? <span> {network.name}</span> : null : null}
+              {balance.wei && (
+                <React.Fragment>
+                  {balance.isPending ? (
+                    <Spinner />
+                  ) : (
+                    !isOffline && (
+                      <button
+                        className="AccountInfo-section-refresh"
+                        onClick={this.props.setAccountBalance}
+                      >
+                        <i className="fa fa-refresh" />
+                      </button>
+                    )
+                  )}
+                </React.Fragment>
+              )}
             </li>
           </ul>
         </div>
@@ -162,12 +187,12 @@ class AccountInfo extends React.Component<Props, State> {
     );
   }
 }
-
 function mapStateToProps(state: AppState): StateProps {
   return {
     balance: state.wallet.balance,
-    network: getNetworkConfig(state)
+    network: getNetworkConfig(state),
+    isOffline: getOffline(state)
   };
 }
-
-export default connect(mapStateToProps)(AccountInfo);
+const mapDispatchToProps: DispatchProps = { setAccountBalance };
+export default connect(mapStateToProps, mapDispatchToProps)(AccountInfo);

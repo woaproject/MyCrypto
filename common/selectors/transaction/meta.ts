@@ -3,35 +3,14 @@ import { getTransactionState } from './transaction';
 import { getDecimalFromEtherUnit, isEtherUnit } from 'libs/units';
 import { getToken } from 'selectors/wallet';
 
-function getMetaState(state: AppState) {
-  return getTransactionState(state).meta;
-}
-
-function getFrom(state: AppState) {
-  return getMetaState(state).from;
-}
-
-function getDecimal(state: AppState) {
-  return getMetaState(state).decimal;
-}
-
-function getTokenTo(state: AppState) {
-  return getMetaState(state).tokenTo;
-}
-
-function getTokenValue(state: AppState) {
-  return getMetaState(state).tokenValue;
-}
-
-function getUnit(state: AppState) {
-  return getMetaState(state).unit;
-}
-
-function getPreviousUnit(state: AppState) {
-  return getMetaState(state).previousUnit;
-}
-
-function getDecimalFromUnit(state: AppState, unit: string) {
+const getMetaState = (state: AppState) => getTransactionState(state).meta;
+const getFrom = (state: AppState) => getMetaState(state).from;
+const getDecimal = (state: AppState) => getMetaState(state).decimal;
+const getTokenTo = (state: AppState) => getMetaState(state).tokenTo;
+const getTokenValue = (state: AppState) => getMetaState(state).tokenValue;
+const getUnit = (state: AppState) => getMetaState(state).unit;
+const getPreviousUnit = (state: AppState) => getMetaState(state).previousUnit;
+const getDecimalFromUnit = (state: AppState, unit: string) => {
   if (isEtherUnit(unit)) {
     return getDecimalFromEtherUnit('ether');
   } else {
@@ -41,7 +20,7 @@ function getDecimalFromUnit(state: AppState, unit: string) {
     }
     return token.decimal;
   }
-}
+};
 
 export {
   getFrom,

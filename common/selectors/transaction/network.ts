@@ -6,9 +6,11 @@ export function getNetworkStatus(state: AppState) {
   return getTransactionState(state).network;
 }
 
-export function nonceRequestFailed(state: AppState) {
-  return getNetworkStatus(state).getNonceStatus === RequestStatus.FAILED;
-}
+export const nonceRequestPending = (state: AppState) =>
+  getNetworkStatus(state).getNonceStatus === RequestStatus.REQUESTED;
+
+export const nonceRequestFailed = (state: AppState) =>
+  getNetworkStatus(state).getNonceStatus === RequestStatus.FAILED;
 
 export function isNetworkRequestPending(state: AppState) {
   const network = getNetworkStatus(state);

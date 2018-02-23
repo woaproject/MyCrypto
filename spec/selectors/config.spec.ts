@@ -6,9 +6,15 @@ describe('selectors/config', () => {
     const noContractsState = getInitialState();
     noContractsState.config = {
       ...noContractsState.config,
-      network: {
-        ...noContractsState.config.network,
-        contracts: null
+      networks: {
+        ...noContractsState.config.networks,
+        staticNetworks: {
+          ...noContractsState.config.networks.staticNetworks,
+          ETH: {
+            ...noContractsState.config.networks.staticNetworks.ETH,
+            contracts: []
+          }
+        }
       }
     };
 
@@ -16,19 +22,25 @@ describe('selectors/config', () => {
       const contractsState = getInitialState();
       contractsState.config = {
         ...noContractsState.config,
-        network: {
-          ...noContractsState.config.network,
-          contracts: [
-            {
-              name: 'test',
-              address: 'test',
-              abi: 'test'
+        networks: {
+          ...noContractsState.config.networks,
+          staticNetworks: {
+            ...noContractsState.config.networks.staticNetworks,
+            ETH: {
+              ...noContractsState.config.networks.staticNetworks.ETH,
+              contracts: [
+                {
+                  name: 'test',
+                  address: 'test',
+                  abi: 'test'
+                }
+              ]
             }
-          ]
+          }
         }
       };
       const contracts = getNetworkContracts(contractsState);
-      expect(contracts).toEqual(contractsState.config.network.contracts);
+      expect(contracts).toEqual(contractsState.config.networks.staticNetworks.ETH.contracts);
     });
 
     it('should return an empty array when there’re no network contracts', () => {
@@ -45,15 +57,24 @@ describe('selectors/config', () => {
 
   describe('getAllTokens', () => {
     const allTokensState = getInitialState();
-    allTokensState.config.network = {
-      ...allTokensState.config.network,
-      tokens: [
-        {
-          address: 'test',
-          symbol: 'TEST',
-          decimal: 18
+    allTokensState.config = {
+      ...allTokensState.config,
+      networks: {
+        ...allTokensState.config.networks,
+        staticNetworks: {
+          ...allTokensState.config.networks.staticNetworks,
+          ETH: {
+            ...allTokensState.config.networks.staticNetworks.ETH,
+            tokens: [
+              {
+                address: 'test',
+                symbol: 'TEST',
+                decimal: 18
+              }
+            ]
+          }
         }
-      ]
+      }
     };
     allTokensState.customTokens = [
       {
@@ -66,7 +87,7 @@ describe('selectors/config', () => {
 
     it('should return network tokens + custom tokens, custom tokens last', () => {
       expect(allTokens).toEqual(
-        allTokensState.config.network.tokens.concat(allTokensState.customTokens)
+        allTokensState.config.networks.staticNetworks.ETH.tokens.concat(allTokensState.customTokens)
       );
     });
 

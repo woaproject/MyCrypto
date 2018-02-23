@@ -15,20 +15,26 @@ describe('selectors/wallet', () => {
   const tokenBalanceState = getInitialState();
   tokenBalanceState.config = {
     ...tokenBalanceState.config,
-    network: {
-      ...tokenBalanceState.config.network,
-      tokens: [
-        {
-          address: 'test',
-          symbol: 'TEST',
-          decimal: 18
-        },
-        {
-          address: 'zero',
-          symbol: 'ZERO',
-          decimal: 18
+    networks: {
+      ...tokenBalanceState.config.networks,
+      staticNetworks: {
+        ...tokenBalanceState.config.networks.staticNetworks,
+        ETH: {
+          ...tokenBalanceState.config.networks.staticNetworks.ETH,
+          tokens: [
+            {
+              address: 'test',
+              symbol: 'TEST',
+              decimal: 18
+            },
+            {
+              address: 'zero',
+              symbol: 'ZERO',
+              decimal: 18
+            }
+          ]
         }
-      ]
+      }
     }
   };
   tokenBalanceState.wallet = {
@@ -64,12 +70,15 @@ describe('selectors/wallet', () => {
 
     it('should return network tokens + custom tokens, custom tokens last', () => {
       expect(tokens).toHaveLength(
-        tokenBalanceState.config.network.tokens.length + tokensState.customTokens.length
+        tokenBalanceState.config.networks.staticNetworks.ETH.tokens.length +
+          tokensState.customTokens.length
       );
     });
 
     it('should mark custom tokens as such', () => {
-      expect(tokens[tokenBalanceState.config.network.tokens.length].custom).toBeTruthy();
+      expect(
+        tokens[tokenBalanceState.config.networks.staticNetworks.ETH.tokens.length].custom
+      ).toBeTruthy();
     });
 
     testShallowlyEqual(tokens, getTokens(tokensState));

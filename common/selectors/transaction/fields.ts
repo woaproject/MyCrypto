@@ -3,40 +3,20 @@ import { getTransactionState, getGasCost } from 'selectors/transaction';
 import { getEtherBalance } from 'selectors/wallet';
 import { getOffline } from 'selectors/config';
 
-function getFields(state: AppState) {
-  return getTransactionState(state).fields;
-}
+const getFields = (state: AppState) => getTransactionState(state).fields;
+const getTo = (state: AppState) => getFields(state).to;
+const getData = (state: AppState) => getFields(state).data;
+const getGasLimit = (state: AppState) => getFields(state).gasLimit;
+const getGasPrice = (state: AppState) => getFields(state).gasPrice;
+const getValue = (state: AppState) => getFields(state).value;
+const getNonce = (state: AppState) => getFields(state).nonce;
 
-function getTo(state: AppState) {
-  return getFields(state).to;
-}
-
-function getData(state: AppState) {
-  return getFields(state).data;
-}
-
-function getGasLimit(state: AppState) {
-  return getFields(state).gasLimit;
-}
-
-function getGasPrice(state: AppState) {
-  return getFields(state).gasPrice;
-}
-
-function getValue(state: AppState) {
-  return getFields(state).value;
-}
-
-function getNonce(state: AppState) {
-  return getFields(state).nonce;
-}
-
-function getDataExists(state: AppState) {
+const getDataExists = (state: AppState) => {
   const { value } = getData(state);
   return !!value && value.length > 0;
-}
+};
 
-function getValidGasCost(state: AppState) {
+const getValidGasCost = (state: AppState) => {
   const gasCost = getGasCost(state);
   const etherBalance = getEtherBalance(state);
   const isOffline = getOffline(state);
@@ -44,7 +24,7 @@ function getValidGasCost(state: AppState) {
     return true;
   }
   return gasCost.lte(etherBalance);
-}
+};
 
 export {
   getData,

@@ -1,4 +1,3 @@
-import { createSelector } from 'reselect';
 import { AppState } from 'reducers';
 import { getCurrentTo, getCurrentValue } from './current';
 import { getFields } from './fields';

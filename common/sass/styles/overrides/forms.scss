@@ -30,15 +30,14 @@ input[readonly] {
 }
 
 .form-control {
-  margin-top: $space-sm;
   margin-bottom: $space-sm;
   transition: $transition;
+  padding: $input-padding;
 
   &:focus {
     border-color: $input-border-focus;
     outline: 0;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
-      0 0 1px rgba($brand-primary, 0.5);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 1px rgba($brand-primary, 0.5);
   }
 }
 
@@ -63,13 +62,11 @@ select.form-control {
 // Custom feedback classes
 @mixin form-control-state($color) {
   border-color: lighten($color, 20%);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075)
-    0 0 1px rgba($color, 0.1);
+  @include input-shadow($color);
 
   &:focus {
     border-color: lighten($color, 5%);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.125),
-      0 0 1px rgba($color, 0.5);
+    @include input-focus-shadow($color);
   }
 }
 
@@ -84,5 +81,19 @@ select.form-control {
 
   &.is-semivalid {
     @include form-control-state($brand-warning);
+  }
+}
+
+.help-block {
+  &.is-valid {
+    color: $brand-success;
+  }
+
+  &.is-invalid {
+    color: $brand-danger;
+  }
+
+  &.is-semivalid {
+    color: $brand-warning;
   }
 }

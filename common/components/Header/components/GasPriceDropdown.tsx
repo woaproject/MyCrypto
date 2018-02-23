@@ -1,7 +1,7 @@
-import { gasPriceDefaults, knowledgeBaseURL } from 'config';
+import { gasPriceDefaults, HELP_ARTICLE } from 'config';
 import throttle from 'lodash/throttle';
 import React, { Component } from 'react';
-import DropdownShell from 'components/ui/DropdownShell';
+import { DropdownShell, HelpLink } from 'components/ui';
 import './GasPriceDropdown.scss';
 import { SetGasLimitFieldAction } from 'actions/transaction';
 import { gasPricetoBase } from 'libs/units';
@@ -53,8 +53,8 @@ class GasPriceDropdown extends Component<Props> {
           <input
             type="range"
             value={this.props.gasPrice.raw}
-            min={gasPriceDefaults.gasPriceMinGwei}
-            max={gasPriceDefaults.gasPriceMaxGwei}
+            min={gasPriceDefaults.minGwei}
+            max={gasPriceDefaults.maxGwei}
             onChange={this.handleGasPriceChange}
           />
           <p className="small col-xs-4 text-left GasPrice-padding-reset">Not So Fast</p>
@@ -67,13 +67,7 @@ class GasPriceDropdown extends Component<Props> {
             <code>21 GWEI</code>.
           </p>
           <p>
-            <a
-              href={`${knowledgeBaseURL}/gas/what-is-gas-ethereum`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Read more
-            </a>
+            <HelpLink article={HELP_ARTICLE.WHAT_IS_GAS}>Read more</HelpLink>
           </p>
         </div>
       </div>

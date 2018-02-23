@@ -5,11 +5,11 @@ import { withRouter, Switch, Redirect, HashRouter, Route, BrowserRouter } from '
 import Contracts from 'containers/Tabs/Contracts';
 import ENS from 'containers/Tabs/ENS';
 import GenerateWallet from 'containers/Tabs/GenerateWallet';
-import Help from 'containers/Tabs/Help';
 import SendTransaction from 'containers/Tabs/SendTransaction';
 import Swap from 'containers/Tabs/Swap';
 import SignAndVerifyMessage from 'containers/Tabs/SignAndVerifyMessage';
 import BroadcastTx from 'containers/Tabs/BroadcastTx';
+import CheckTransaction from 'containers/Tabs/CheckTransaction';
 import ErrorScreen from 'components/ErrorScreen';
 import PageNotFound from 'components/PageNotFound';
 import LogOutPrompt from 'components/LogOutPrompt';
@@ -18,6 +18,8 @@ import { Store } from 'redux';
 import { pollOfflineStatus } from 'actions/config';
 import { AppState } from 'reducers';
 import { RouteNotFound } from 'components/RouteNotFound';
+import { RedirectWithQuery } from 'components/RedirectWithQuery';
+import 'what-input';
 
 interface Props {
   store: Store<AppState>;
@@ -59,16 +61,15 @@ export default class Root extends Component<Props, State> {
     const routes = (
       <CaptureRouteNotFound>
         <Switch>
-          <Route exact={true} path="/" component={GenerateWallet} />
-          <Route path="/generate" component={GenerateWallet} />
+          <Redirect exact={true} from="/" to="/account" />
           <Route path="/account" component={SendTransaction} />
+          <Route path="/generate" component={GenerateWallet} />
           <Route path="/swap" component={Swap} />
           <Route path="/contracts" component={Contracts} />
-          <Route path="/ens" component={ENS} />
-          <Route path="/help" component={Help} />
+          <Route path="/ens" component={ENS} exact={true} />
           <Route path="/sign-and-verify-message" component={SignAndVerifyMessage} />
+          <Route path="/tx-status" component={CheckTransaction} exact={true} />
           <Route path="/pushTx" component={BroadcastTx} />
-          <Route path="/send-transaction" component={SendTransaction} />
           <RouteNotFound />
         </Switch>
       </CaptureRouteNotFound>
@@ -96,14 +97,15 @@ export default class Root extends Component<Props, State> {
 
 const LegacyRoutes = withRouter(props => {
   const { history } = props;
-  const { pathname, hash } = props.location;
+  const { pathname } = props.location;
+  let { hash } = props.location;
 
   if (pathname === '/') {
+    hash = hash.split('?')[0];
     switch (hash) {
       case '#send-transaction':
       case '#offline-transaction':
-        history.push('/send-transaction');
-        break;
+        return <RedirectWithQuery from={pathname} to={'account/send'} />;
       case '#generate-wallet':
         history.push('/');
         break;
@@ -120,16 +122,15 @@ const LegacyRoutes = withRouter(props => {
         history.push('/account/info');
         break;
       case '#check-tx-status':
-        history.push('/check-tx-status');
-        break;
+        return <RedirectWithQuery from={pathname} to={'/tx-status'} />;
     }
   }
 
   return (
     <Switch>
-      <Redirect from="/signmsg.html" to="/sign-and-verify-message" />
-      <Redirect from="/helpers.html" to="/helpers" />
-      <Redirect from="/send-transaction" to="/account/send" />
+      <RedirectWithQuery from="/signmsg.html" to="/sign-and-verify-message" />
+      <RedirectWithQuery from="/helpers.html" to="/helpers" />
+      <RedirectWithQuery from="/send-transaction" to={'/account/send'} />
     </Switch>
   );
 });

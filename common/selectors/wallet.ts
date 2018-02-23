@@ -1,11 +1,14 @@
 import { createSelector } from 'reselect';
 import { TokenValue, Wei } from 'libs/units';
-import { Token } from 'config';
+import { SecureWalletName, WalletName } from 'config';
 import { AppState } from 'reducers';
-import { getNetworkTokens } from 'selectors/config';
-import { getCustomTokens } from 'selectors/customTokens';
+import { getNetworkConfig, getNetworkTokens, getOffline } from 'selectors/config';
 import { Web3Wallet, LedgerWallet, TrezorWallet } from 'libs/wallet';
+import { getCustomTokens } from 'selectors/customTokens';
 import { isEtherTransaction, getUnit } from './transaction';
+import { DisabledWallets } from 'components/WalletDecrypt';
+import { Token } from 'types/network';
+import { unSupportedWalletFormatsOnNetwork } from 'selectors/config/wallet';
 
 function getWalletTokenBalances(state: AppState) {
   return state.wallet.tokens;
@@ -123,9 +126,10 @@ export function isUnlocked(state: AppState) {
   return !!getWalletInst(state);
 }
 
-export function getEtherBalance(state: AppState): Wei | null {
-  return getWallet(state).balance.wei;
-}
+export const isEtherBalancePending = (state: AppState): boolean =>
+  getWallet(state).balance.isPending;
+
+export const getEtherBalance = (state: AppState): Wei | null => getWallet(state).balance.wei;
 
 export function getCurrentBalance(state: AppState): Wei | TokenValue | null {
   const etherTransaction = isEtherTransaction(state);
@@ -155,3 +159,53 @@ export const getNonZeroShownTokenBalances = createSelector(
   getWalletConfig,
   getShown
 );
+
+// TODO: Convert to reselect selector (Issue #884)
+export function getDisabledWallets(state: AppState): DisabledWallets {
+  const network = getNetworkConfig(state);
+  const isOffline = getOffline(state);
+  const disabledWallets: DisabledWallets = {
+    wallets: [],
+    reasons: {}
+  };
+
+  const addReason = (wallets: WalletName[], reason: string) => {
+    if (!wallets.length) {
+      return;
+    }
+
+    disabledWallets.wallets = disabledWallets.wallets.concat(wallets);
+    wallets.forEach(wallet => {
+      disabledWallets.reasons[wallet] = reason;
+    });
+  };
+
+  // Some wallets don't support some networks
+  addReason(
+    unSupportedWalletFormatsOnNetwork(state),
+    `${network.name} does not support this wallet`
+  );
+
+  // Some wallets are unavailable offline
+  if (isOffline) {
+    addReason(
+      [SecureWalletName.WEB3, SecureWalletName.TREZOR],
+      'This wallet cannot be accessed offline'
+    );
+  }
+
+  // Some wallets are disabled on certain platforms
+  if (process.env.BUILD_DOWNLOADABLE) {
+    addReason([SecureWalletName.LEDGER_NANO_S], 'This wallet is only supported at MyCrypto.com');
+  }
+  if (process.env.BUILD_ELECTRON) {
+    addReason([SecureWalletName.WEB3], 'This wallet is not supported in the MyCrypto app');
+  }
+
+  // Dedupe and sort for consistency
+  disabledWallets.wallets = disabledWallets.wallets
+    .filter((name, idx) => disabledWallets.wallets.indexOf(name) === idx)
+    .sort();
+
+  return disabledWallets;
+}
