@@ -13,10 +13,12 @@ SortCachePlugin.prototype.apply = function(compiler) {
     const cacheFilePaths = klawSync(buildDir, { filter: findCacheFile });
 
     if (!cacheFilePaths.length) {
-      throw new Error('Could not find .cache file');
+      console.warn('No cache icon cache file found for sorting.');
+      return;
     }
+
     if (cacheFilePaths.length > 1) {
-      throw new Error('More than one possible .cache file detected');
+      throw new Error('More than one possible icon .cache file detected', cacheFilePaths);
     }
 
     const cacheFilePath = cacheFilePaths[0].path;
